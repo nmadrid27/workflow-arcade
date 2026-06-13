@@ -1,0 +1,1651 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Workflow Arcade</title>
+<meta name="description" content="A pixel-art learning game that teaches first-time macOS users Claude Code and the Epistemic Stewardship Framework. Seven quests, one HTML file, fully offline tutor." />
+<meta property="og:title" content="Workflow Arcade" />
+<meta property="og:description" content="Learn Claude Code inside real work: seven pixel-art quests from empty Terminal to a finished, verified, honestly disclosed first project." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://nmadrid27.github.io/workflow-arcade/" />
+<meta name="twitter:card" content="summary" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%231a1530'/%3E%3Crect x='2' y='3' width='12' height='11' fill='%235a5390'/%3E%3Crect x='4' y='5' width='8' height='6' fill='%230d0a1c'/%3E%3Crect x='5' y='6' width='2' height='2' fill='%235fd6a6'/%3E%3Crect x='9' y='6' width='2' height='2' fill='%235fd6a6'/%3E%3Crect x='6' y='9' width='4' height='1' fill='%235fd6a6'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&amp;family=VT323&amp;display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1a1530;        /* indigo plum night */
+    --bg2:#15102a;
+    --panel:#241d3d;
+    --panel2:#2c2348;
+    --ink:#efe9ff;
+    --muted:#9a8fc4;
+    --amber:#ffc24b;     /* primary accent */
+    --mint:#5fd6a6;      /* secondary accent */
+    --rose:#ff8aa5;      /* tertiary accent */
+    --outline:#0d0a1c;
+    --line:#3a2f5e;
+    --cell:13px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:
+      radial-gradient(120% 80% at 80% -10%, rgba(255,194,75,.10), transparent 60%),
+      radial-gradient(100% 80% at -10% 110%, rgba(95,214,166,.10), transparent 55%),
+      var(--bg);
+    color:var(--ink);
+    font-family:'VT323', ui-monospace, monospace;
+    font-size:21px;
+    line-height:1.35;
+    -webkit-font-smoothing:none;
+  }
+  .pixel{font-family:'Press Start 2P', ui-monospace, monospace; line-height:1.6;}
+
+  /* hard pixel border + offset shadow */
+  .box{
+    background:var(--panel);
+    border:3px solid var(--outline);
+    box-shadow:6px 6px 0 0 var(--outline);
+  }
+  .scan::after{
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, transparent 1px 3px);
+    mix-blend-mode:multiply; opacity:.5;
+  }
+
+  /* ---- top bar ---- */
+  header{
+    display:flex; align-items:center; gap:16px;
+    padding:14px 18px;
+    border-bottom:3px solid var(--outline);
+    background:linear-gradient(var(--panel2),var(--panel));
+    position:sticky; top:0; z-index:30;
+  }
+  .brand{display:flex;align-items:center;gap:12px;cursor:pointer;background:none;border:0;color:inherit;padding:0;text-align:left;}
+  .brand .logo{
+    width:34px;height:34px;background:var(--amber);border:3px solid var(--outline);
+    display:grid;place-items:center;color:var(--outline);font-size:14px;
+    box-shadow:3px 3px 0 0 var(--outline);
+  }
+  .brand h1{font-size:13px;margin:0;color:var(--ink);letter-spacing:1px;}
+  .brand small{display:block;font-family:'VT323';font-size:16px;color:var(--muted);letter-spacing:0;}
+  .hud{margin-left:auto;display:flex;align-items:center;gap:18px;}
+  .xp{display:flex;align-items:center;gap:8px;font-family:'Press Start 2P';font-size:10px;color:var(--amber);}
+  .bar{width:140px;height:14px;background:var(--bg2);border:3px solid var(--outline);position:relative;}
+  .bar > i{display:block;height:100%;width:0;background:var(--mint);transition:width .4s steps(8);}
+
+  /* ---- layout ---- */
+  main{
+    display:grid;
+    grid-template-columns: 220px 1fr 340px;
+    gap:18px; padding:18px; max-width:1280px; margin:0 auto;
+    align-items:start;
+  }
+  h2.pixel{font-size:12px;color:var(--muted);margin:0 0 12px;letter-spacing:1px;}
+
+  /* modules */
+  nav.modules{padding:16px;position:relative;}
+  .quest{
+    display:flex;gap:10px;align-items:flex-start;
+    width:100%;padding:10px;margin:0 0 10px;cursor:pointer;color:var(--ink);text-align:left;font-family:'VT323',ui-monospace,monospace;
+    border:3px solid transparent;background:var(--panel2);
+    transition:transform .06s steps(2);
+  }
+  .quest:hover{transform:translate(-2px,-2px);border-color:var(--line);}
+  .quest.active{border-color:var(--amber);box-shadow:4px 4px 0 0 var(--outline);}
+  .quest .num{font-family:'Press Start 2P';font-size:10px;color:var(--amber);margin-top:3px;}
+  .quest .t{font-size:19px;line-height:1.1;}
+  .quest .s{font-size:15px;color:var(--muted);}
+  .quest.locked{opacity:.6;}
+  .quest .tag{font-family:'Press Start 2P';font-size:7px;padding:3px 5px;background:var(--bg2);color:var(--rose);border:2px solid var(--outline);}
+  .quest .tag.done{color:var(--outline);background:var(--mint);}
+  .world{
+    display:flex;justify-content:space-between;align-items:center;gap:8px;
+    width:100%;padding:10px;margin:0 0 8px;cursor:pointer;text-align:left;
+    font-family:'Press Start 2P';font-size:8px;color:var(--amber);
+    background:var(--bg2);border:3px solid var(--outline);
+  }
+  .world:hover{background:var(--panel2);}
+  .world .wstat{color:var(--muted);font-size:7px;white-space:nowrap;}
+  .wbody{margin:0 0 6px;}
+
+  /* center content */
+  section.stage{padding:22px 24px;position:relative;min-height:60vh;}
+  .hero{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;padding:10px 0 6px;}
+  .hero h3{font-family:'Press Start 2P';font-size:22px;line-height:1.5;margin:6px 0 0;color:var(--ink);}
+  .hero h3 b{color:var(--amber);}
+  .hero p{max-width:48ch;color:var(--muted);font-size:21px;margin:0;}
+  .hero .pixwrap{filter:drop-shadow(7px 7px 0 var(--outline));}
+
+  .btn{
+    font-family:'Press Start 2P';font-size:11px;cursor:pointer;color:var(--outline);
+    background:var(--amber);border:3px solid var(--outline);padding:13px 16px;
+    box-shadow:5px 5px 0 0 var(--outline);transition:transform .05s steps(2),box-shadow .05s steps(2);
+  }
+  .btn:hover{transform:translate(-1px,-1px);}
+  .btn:active{transform:translate(4px,4px);box-shadow:1px 1px 0 0 var(--outline);}
+  .btn.ghost{background:var(--panel2);color:var(--ink);}
+  .btn.mint{background:var(--mint);}
+  .brand:focus-visible,.quest:focus-visible,.world:focus-visible,.btn:focus-visible,.send:focus-visible,.chat-toggle:focus-visible,
+  .codewrap .copy:focus-visible,.resetbtn:focus-visible,.egbtn:focus-visible,.gbtn:focus-visible,
+  .composer input:focus-visible,.termrow input:focus-visible,.sandbox textarea:focus-visible,
+  .certfield input:focus-visible,.mapnode:focus-visible{
+    outline:3px solid var(--mint);outline-offset:3px;
+  }
+  .branch-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0;}
+  .branch-card{min-height:130px;text-align:left;}
+  .branch-card b{display:block;margin-bottom:8px;}
+
+  /* badge case: target-behavior achievements, earned lit and unearned dim */
+  .badgewrap{margin:22px 0 6px;text-align:left;}
+  .badgehead{font-family:'Press Start 2P';font-size:10px;color:var(--muted);letter-spacing:1px;margin:0 0 12px;}
+  .badgegrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+  .badge{
+    display:flex;flex-direction:column;gap:6px;text-align:left;padding:10px 12px;
+    background:var(--panel2);border:3px solid var(--outline);color:var(--muted);opacity:.65;
+  }
+  .badge .bt{font-family:'Press Start 2P';font-size:7px;line-height:1.5;color:var(--muted);letter-spacing:1px;}
+  .badge .bd{font-family:'VT323';font-size:16px;line-height:1.2;}
+  .badge.earned{border-color:var(--amber);opacity:1;box-shadow:3px 3px 0 0 var(--outline);}
+  .badge.earned .bt{color:var(--amber);}
+  .badge.earned .bd{color:var(--ink);}
+  .badge .lock{color:var(--rose);}
+  @media (max-width:520px){ .badgegrid{grid-template-columns:1fr;} }
+
+  /* quest map: overworld path. Canvas is decoration; nodes are real buttons. */
+  .mapwrap{position:relative;max-width:560px;margin:0 auto 6px;}
+  #mapcv{display:block;width:100%;height:auto;image-rendering:pixelated;}
+  .mapnode{
+    position:absolute;transform:translate(-50%,-50%);
+    width:34px;height:34px;display:grid;place-items:center;cursor:pointer;
+    font-family:'Press Start 2P';font-size:9px;color:var(--ink);
+    background:var(--panel2);border:3px solid var(--outline);box-shadow:3px 3px 0 0 var(--outline);
+    padding:0;
+  }
+  .mapnode:hover{transform:translate(-50%,-50%) scale(1.06);}
+  .mapnode.cleared{background:var(--mint);color:var(--outline);}
+  .mapnode.current{background:var(--amber);color:var(--outline);animation:pulse 1.1s steps(6) infinite;}
+  .mapnode .nlabel{
+    position:absolute;top:38px;left:50%;transform:translateX(-50%);
+    font-family:'VT323';font-size:12px;line-height:1.05;color:var(--muted);
+    max-width:70px;text-align:center;pointer-events:none;
+  }
+  @keyframes pulse{0%{box-shadow:3px 3px 0 0 var(--outline),0 0 0 0 rgba(255,194,75,.55);}100%{box-shadow:3px 3px 0 0 var(--outline),0 0 0 8px rgba(255,194,75,0);}}
+  @media (max-width:520px){ .mapnode .nlabel{display:none;} }
+
+  /* completion certificate: name never persisted, rendered to canvas */
+  .certfield{display:flex;flex-direction:column;gap:6px;margin:14px 0;max-width:420px;}
+  .certfield label{font-family:'Press Start 2P';font-size:8px;color:var(--muted);letter-spacing:1px;}
+  .certfield input{
+    background:var(--bg2);border:3px solid var(--outline);color:var(--ink);
+    font-family:'VT323';font-size:20px;padding:9px 11px;outline:none;
+  }
+  .certfield input:focus{border-color:var(--mint);}
+  #certcv{width:100%;height:auto;border:3px solid var(--outline);box-shadow:6px 6px 0 0 var(--outline);image-rendering:pixelated;margin:6px 0 16px;}
+
+  .lesson h3.title{font-family:'Press Start 2P';font-size:17px;line-height:1.5;color:var(--amber);margin:0 0 4px;}
+  .lesson .why{background:var(--panel2);border-left:5px solid var(--mint);padding:12px 14px;margin:14px 0 20px;}
+  .lesson .why b{color:var(--mint);font-family:'Press Start 2P';font-size:9px;}
+  ol.steps{list-style:none;counter-reset:s;padding:0;margin:0;}
+  ol.steps > li{counter-increment:s;display:grid;grid-template-columns:38px 1fr;gap:12px;margin:0 0 18px;}
+  ol.steps > li::before{
+    content:counter(s,decimal-leading-zero);font-family:'Press Start 2P';font-size:11px;color:var(--outline);
+    background:var(--amber);width:38px;height:38px;display:grid;place-items:center;border:3px solid var(--outline);
+  }
+  ol.steps .st{font-family:'Press Start 2P';font-size:11px;color:var(--ink);margin:6px 0 6px;line-height:1.5;}
+  pre.code{
+    background:var(--bg2);border:3px solid var(--outline);color:var(--mint);
+    padding:12px 14px;overflow:auto;font-size:18px;line-height:1.4;margin:10px 0;
+  }
+  .codewrap{position:relative;}
+  .codewrap .copy{
+    position:absolute;top:14px;right:8px;font-family:'Press Start 2P';font-size:7px;cursor:pointer;
+    background:var(--panel2);color:var(--ink);border:2px solid var(--outline);padding:5px 7px;
+  }
+  .codewrap .copy:hover{background:var(--line);}
+  .resetbtn{background:none;border:none;color:var(--muted);font-family:'VT323';font-size:16px;cursor:pointer;text-decoration:underline;padding:0;margin-left:10px;}
+  .egwrap{border-top:2px solid var(--line);padding:8px 12px 10px;}
+  .egbtn{font-family:'Press Start 2P';font-size:7px;cursor:pointer;background:var(--panel2);color:var(--mint);border:2px solid var(--outline);padding:5px 7px;}
+  .egbtn:hover{background:var(--line);}
+  .eg{margin-top:8px;color:var(--muted);font-size:18px;line-height:1.3;white-space:pre-wrap;border-left:3px solid var(--mint);padding-left:10px;}
+  .egbtn.check{color:var(--amber);margin-right:8px;}
+  .padfb{margin-top:8px;font-size:18px;line-height:1.3;}
+  .padfb.ok{color:var(--mint);}
+  .padfb.miss{color:var(--rose);}
+  .gbtn{font-family:'Press Start 2P';font-size:9px;background:var(--panel2);color:var(--mint);border:3px solid var(--outline);padding:9px 11px;cursor:pointer;box-shadow:3px 3px 0 0 var(--outline);}
+  .gbtn:hover{transform:translate(-1px,-1px);}
+  .gentry{border:3px solid var(--line);padding:12px 14px;margin:0 0 14px;}
+  .ftree{background:var(--bg2);color:var(--muted);padding:10px 12px;margin:0;font-family:'VT323';font-size:18px;line-height:1.35;white-space:pre;overflow-x:auto;}
+  .ftree b{color:var(--amber);font-weight:normal;}
+  .simviz{border-bottom:2px solid var(--line);}
+  .lesson .see{color:var(--mint);font-size:17px;margin-top:8px;border-left:3px solid var(--mint);padding-left:10px;}
+
+  /* walkthrough */
+  .stepmeta{font-family:'Press Start 2P';font-size:9px;color:var(--muted);margin:6px 0 10px;}
+  .stepmeta .pr{color:var(--mint);margin-left:10px;}
+  .stepmeta .where{font-size:7px;color:var(--outline);background:var(--amber);border:2px solid var(--outline);padding:3px 5px;margin-right:8px;}
+  .wdots{display:flex;gap:6px;margin:8px 0 4px;flex-wrap:wrap;}
+  .wdots i{width:14px;height:14px;background:var(--bg2);border:2px solid var(--outline);}
+  .wdots i.on{background:var(--amber);}
+  .wdots i.pr{background:var(--mint);}
+  .walknav{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;}
+  .walknav .btn.next{margin-left:auto;}
+  .sandbox{margin-top:18px;border:3px solid var(--outline);background:var(--bg2);}
+  .sbtitle{font-family:'Press Start 2P';font-size:8px;color:var(--rose);padding:9px 10px;border-bottom:3px solid var(--outline);background:var(--panel2);display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;}
+  .sbhint{font-family:'VT323';font-size:15px;color:var(--muted);}
+  .termout{padding:10px 12px;min-height:54px;max-height:220px;overflow-y:auto;color:var(--mint);font-size:18px;line-height:1.3;white-space:pre-wrap;}
+  .termout .cmd{color:var(--ink);}
+  .termout .dim{color:var(--muted);}
+  .termrow{display:flex;align-items:center;gap:8px;border-top:2px solid var(--line);padding:6px 12px;}
+  .termrow .prompt{color:var(--amber);font-size:19px;}
+  .termrow input{flex:1;background:transparent;border:none;outline:none;color:var(--ink);font-family:'VT323';font-size:19px;}
+  .sandbox textarea{width:100%;min-height:110px;background:transparent;border:none;outline:none;color:var(--ink);font-family:'VT323';font-size:19px;padding:10px 12px;resize:vertical;display:block;}
+  .tryit{background:var(--panel2);border:3px dashed var(--rose);padding:12px 14px;margin:18px 0;}
+  .tryit b{color:var(--rose);font-family:'Press Start 2P';font-size:9px;}
+  .checkpoint{display:flex;align-items:center;gap:14px;margin-top:22px;border-top:3px solid var(--line);padding-top:18px;flex-wrap:wrap;}
+
+  /* PIX panel + chat */
+  aside.tutor{padding:0;position:relative;display:flex;flex-direction:column;overflow:hidden;}
+  .pixbay{
+    position:relative;padding:16px 12px 10px;display:flex;flex-direction:column;align-items:center;gap:8px;
+    background:radial-gradient(80% 70% at 50% 30%, rgba(95,214,166,.12), transparent 70%), var(--panel2);
+    border-bottom:3px solid var(--outline);
+  }
+  .pixscreen{position:relative;background:var(--bg2);border:3px solid var(--outline);padding:8px;box-shadow:inset 0 0 0 2px #000;}
+  .pixname{font-family:'Press Start 2P';font-size:9px;color:var(--mint);}
+  .pixname .dot{color:var(--mint);}
+  .log{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:200px;max-height:340px;}
+  .msg{max-width:90%;padding:8px 11px;border:3px solid var(--outline);font-size:19px;line-height:1.25;}
+  .msg.pix{align-self:flex-start;background:var(--panel2);}
+  .msg.me{align-self:flex-end;background:var(--amber);color:var(--outline);}
+  .msg .who{font-family:'Press Start 2P';font-size:7px;color:var(--muted);display:block;margin-bottom:5px;letter-spacing:1px;}
+  .msg.me .who{color:#6b4e12;}
+  .dots span{animation:bp 1s steps(3) infinite;}
+  .dots span:nth-child(2){animation-delay:.15s}
+  .dots span:nth-child(3){animation-delay:.3s}
+  @keyframes bp{0%{opacity:.2}50%{opacity:1}100%{opacity:.2}}
+  .composer{display:flex;gap:8px;padding:12px;border-top:3px solid var(--outline);background:var(--panel);}
+  .composer input{
+    flex:1;background:var(--bg2);border:3px solid var(--outline);color:var(--ink);
+    font-family:'VT323';font-size:20px;padding:9px 11px;outline:none;
+  }
+  .composer input:focus{border-color:var(--mint);}
+  .send{font-family:'Press Start 2P';font-size:9px;background:var(--mint);color:var(--outline);border:3px solid var(--outline);padding:0 12px;cursor:pointer;}
+  .send:active{transform:translate(2px,2px);}
+
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;z-index:60;
+    background:var(--mint);color:var(--outline);border:3px solid var(--outline);box-shadow:5px 5px 0 0 var(--outline);
+    font-family:'Press Start 2P';font-size:10px;padding:12px 16px;opacity:0;pointer-events:none;transition:opacity .2s, transform .2s;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
+
+  .chat-toggle{display:none;}
+  .skip{position:absolute;left:-9999px;top:0;z-index:100;background:var(--amber);color:var(--outline);font-family:'Press Start 2P';font-size:10px;padding:10px 14px;border:3px solid var(--outline);text-decoration:none;}
+  .skip:focus{left:10px;top:10px;}
+  /* responsive */
+  @media (max-width:980px){
+    header{flex-wrap:wrap;}
+    .hud{margin-left:auto;}
+    main{grid-template-columns:1fr;}
+    nav.modules{order:2;}
+    section.stage{order:1;}
+    aside.tutor{
+      order:3;position:fixed;right:14px;bottom:78px;width:min(360px,92vw);z-index:50;
+      display:none;max-height:70vh;
+    }
+    aside.tutor.open{display:flex;}
+    .chat-toggle{
+      display:flex;align-items:center;gap:8px;position:fixed;right:14px;bottom:14px;z-index:55;
+      font-family:'Press Start 2P';font-size:10px;background:var(--amber);color:var(--outline);
+      border:3px solid var(--outline);box-shadow:5px 5px 0 0 var(--outline);padding:12px 14px;cursor:pointer;
+    }
+    aside.tutor.open + .chat-toggle{background:var(--rose);}
+  }
+  @media (max-width:520px){
+    header{align-items:flex-start;}
+    .brand small{max-width:170px;}
+    .hud{width:100%;justify-content:flex-end;}
+    .bar{width:110px;}
+    .branch-grid{grid-template-columns:1fr;}
+    section.stage{padding:18px;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;animation:none !important;}
+  }
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:var(--line);border:2px solid var(--outline)}
+  ::-webkit-scrollbar-track{background:var(--bg2)}
+</style>
+</head>
+<body>
+<a class="skip" href="#stage">Skip to quest content</a>
+<header>
+  <button class="brand" onclick="App.goHome()" aria-label="Workflow Arcade home">
+    <div class="logo pixel">A</div>
+    <div>
+      <h1 class="pixel">WORKFLOW ARCADE</h1>
+      <small>learn AI workflows, one quest at a time</small>
+    </div>
+  </button>
+  <div class="hud">
+    <button class="gbtn pixel" onclick="App.openGuide()" aria-label="Open field guide">GUIDE <span id="gcount">0</span></button>
+    <div class="xp">XP <span id="xpval">0</span></div>
+    <div class="xp">QUESTS <div class="bar" role="progressbar" aria-label="Quests cleared" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="progbar"></i></div></div>
+  </div>
+</header>
+
+<main>
+  <nav class="modules box scan" id="modules" aria-label="Quest log"></nav>
+
+  <section class="stage box scan" id="stage" aria-label="Active quest"></section>
+
+  <aside class="tutor box scan" id="tutor">
+    <div class="pixbay">
+      <div class="pixscreen"><canvas id="pix" width="192" height="192" aria-label="PIXEL the tutor"></canvas></div>
+      <div class="pixname"><span class="dot">&#9679;</span> PIXEL: offline guide</div>
+    </div>
+    <div class="log" id="log" aria-live="polite" aria-label="PIXEL messages"></div>
+    <div class="composer">
+      <input id="chatin" placeholder="ask PIXEL anything..." autocomplete="off" aria-label="Ask PIXEL" />
+      <button class="send" id="sendbtn">SEND</button>
+    </div>
+  </aside>
+</main>
+
+<button class="chat-toggle" id="chatToggle" onclick="App.toggleChat()" aria-label="Toggle PIXEL guide" aria-expanded="false" aria-controls="tutor">&#9632; PIXEL</button>
+<div class="toast" id="toast" aria-hidden="true"></div>
+<div id="status" aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)"></div>
+<footer style="max-width:1280px;margin:0 auto;padding:0 18px 24px;color:var(--muted);font-size:16px">
+  Built through AI-assisted collaboration. Nathan Madrid directed the curriculum and decisions; Codex supported implementation and verification.
+  <button class="resetbtn" id="sndbtn" onclick="App.toggleSound()">SOUND: OFF</button>
+  <button class="resetbtn" onclick="App.resetProgress()">RESET PROGRESS</button>
+  <a class="resetbtn" href="https://github.com/nmadrid27/workflow-arcade/issues" target="_blank" rel="noopener">REPORT AN ISSUE</a>
+</footer>
+
+<script>
+/* ============================================================
+   PIX  -  pixel tutor avatar engine
+   Drawn cell-by-cell on a 16x16 grid canvas. State driven.
+   States: idle | think | talk | bored | happy. Ambient: blink, bob, yawn.
+   Display name: PIXEL. The internal identifier stays PIX.
+   ============================================================ */
+const PIX = (function(){
+  const cv = document.getElementById('pix');
+  const ctx = cv.getContext('2d');
+  const N = 16, CELL = cv.width / N;
+  const C = {
+    out:'#0d0a1c', body:'#5a5390', bodHi:'#7d76b8', bodLo:'#3f396b',
+    screen:'#0d0a1c', glow:'#5fd6a6', glowHi:'#8af0c4', amber:'#ffc24b', rose:'#ff8aa5'
+  };
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let state = 'idle';
+  let t0 = performance.now();
+  let nextBlink = 1200 + Math.random()*2500;
+  let blinkT = 0, blinking = false;
+  let mouthPhase = 0;          // talk mouth cycle
+  let yawnT = 0, yawning = false;
+  let idleSince = performance.now();
+
+  function px(x,y,c){ ctx.fillStyle=c; ctx.fillRect(x*CELL,y*CELL,CELL,CELL); }
+  function rect(x0,y0,x1,y1,c){ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) px(x,y,c); }
+
+  function setState(s){
+    if(s===state) return;
+    state=s;
+    if(s==='talk') mouthPhase=0;
+    if(s==='idle') idleSince=performance.now();
+  }
+
+  function draw(now){
+    const dt = now - t0; t0 = now;
+    ctx.clearRect(0,0,cv.width,cv.height);
+
+    // ambient bob (head + antenna gently float)
+    const bobPx = reduce ? 0 : Math.sin(now/520)*2;               // sub-cell vertical drift
+    ctx.save();
+    ctx.translate(0, bobPx);
+
+    // antenna sway
+    const sway = reduce ? 0 : Math.round(Math.sin(now/(state==='think'?260:680)));
+    const tipX = 8 + sway;
+    px(8,3,C.bodLo); px(8,2,C.bodLo);
+    px(tipX,1,state==='think'?C.amber:C.rose);
+    px(tipX,0,state==='think'?C.glowHi:C.amber);
+
+    // head body  (cols 2..13, rows 4..14)
+    rect(2,4,13,14,C.out);            // outline block
+    rect(3,5,12,13,C.body);           // fill
+    rect(3,5,12,5,C.bodHi);           // top highlight
+    rect(3,6,3,13,C.bodHi);           // left highlight
+    rect(12,6,12,13,C.bodLo);         // right shadow
+    rect(3,13,12,13,C.bodLo);         // bottom shadow
+
+    // screen inset (cols 4..11, rows 6..12)
+    rect(4,6,11,12,C.out);
+    rect(5,7,10,11,C.screen);
+
+    // ---- eyes ----
+    let eye = state;
+    if(blinking) eye='blink';
+    drawEyes(eye, now);
+
+    // ---- mouth ----
+    drawMouth(now, dt);
+
+    // little ear bolts
+    px(1,8,C.bodLo); px(1,9,C.body); px(14,8,C.body); px(14,9,C.bodLo);
+
+    ctx.restore();
+
+    // timers
+    handleBlink(now, dt);
+    requestAnimationFrame(draw);
+  }
+
+  function drawEyes(mode, now){
+    const g=C.glow, gh=C.glowHi;
+    // eye anchor cells: left(5..6), right(9..10), rows 8..9 nominal
+    if(mode==='blink'){
+      px(5,9,g);px(6,9,g); px(9,9,g);px(10,9,g);
+      return;
+    }
+    if(mode==='think'){            // look up
+      px(5,8,g);px(6,8,gh); px(9,8,g);px(10,8,gh);
+      px(5,7,C.glow); px(9,7,C.glow);
+      return;
+    }
+    if(mode==='bored'){            // half-lidded
+      px(5,9,g);px(6,9,g); px(9,9,g);px(10,9,g);
+      px(5,8,C.bodLo);px(6,8,C.bodLo);px(9,8,C.bodLo);px(10,8,C.bodLo);
+      return;
+    }
+    if(mode==='happy'){            // squint of joy: outer corners up
+      px(5,8,gh);px(6,9,g); px(9,9,g);px(10,8,gh);
+      return;
+    }
+    // idle / talk : bright open eyes (2x2) with highlight
+    px(5,8,g);px(6,8,gh); px(5,9,g);px(6,9,g);
+    px(9,8,g);px(10,8,gh); px(9,9,g);px(10,9,g);
+  }
+
+  function drawMouth(now, dt){
+    const g=C.glow;
+    if(yawning){ rect(6,10,9,11,g); px(7,11,C.screen);px(8,11,C.screen); return; }
+    if(state==='talk'){
+      mouthPhase += dt;
+      const open = Math.floor(mouthPhase/140)%2===0;
+      if(open){ rect(6,10,9,10,g); rect(7,11,8,11,g); }
+      else { rect(6,10,9,10,g); }
+      return;
+    }
+    if(state==='think'){ rect(7,10,8,10,C.bodLo); return; }
+    if(state==='bored'){ rect(6,10,9,10,C.bodLo); return; }
+    if(state==='happy'){ rect(6,10,9,10,g); rect(7,11,8,11,g); return; }  // open grin
+    // idle smile
+    px(6,10,g); rect(7,11,8,11,g); px(9,10,g);
+  }
+
+  function handleBlink(now, dt){
+    if(reduce) return;
+    if(blinking){
+      blinkT += dt;
+      if(blinkT>120){ blinking=false; blinkT=0; nextBlink = 1400 + Math.random()*3200; }
+      return;
+    }
+    nextBlink -= dt;
+    if(nextBlink<=0 && state!=='think' && state!=='happy'){ blinking=true; }
+
+    // bored + yawn logic
+    if(state==='idle'){
+      const idleMs = now - idleSince;
+      if(idleMs>16000){ setState('bored'); }
+    }
+    if(state==='bored'){
+      yawnT += dt;
+      if(yawnT>4200 && !yawning){ yawning=true; }
+      if(yawning && yawnT>4900){ yawning=false; yawnT=0; }
+    } else { yawnT=0; yawning=false; }
+  }
+
+  // public api
+  function nudge(){ if(state==='bored'){ idleSince=performance.now(); setState('idle'); } }
+  let celebrateTimer = null;
+  function celebrate(){             // brief happy burst, then back to idle
+    setState('happy');
+    clearTimeout(celebrateTimer);
+    celebrateTimer = setTimeout(()=>{ if(state==='happy') setState('idle'); }, 1800);
+  }
+  requestAnimationFrame(draw);
+  return { setState, nudge, celebrate };
+})();
+/* ============================================================
+   CONTENT  -  seven complete Claude Code onboarding quests.
+   A step's optional `where` names the surface it runs on.
+   ============================================================ */
+const WHERE_LABELS = {terminal:'TERMINAL', claude:'CLAUDE CODE', cowork:'COWORK', desktop:'CLAUDE DESKTOP', browser:'BROWSER'};
+const MODULES = [
+  {
+    id:'claude-start', ready:true, xp:120, min:15, learn:{label:'Claude Code documentation', url:'https://code.claude.com/docs'},
+    title:'Start Your First Claude Code Project',
+    sub:'Create a project folder, open Claude Code, and generate CLAUDE.md.',
+    why:'Claude Code works best inside a clear project folder. The folder gives the work a boundary, and CLAUDE.md gives Claude durable instructions for that project.',
+    steps:[
+      { h:'Create a project folder', where:'terminal', hint:'mkdir makes a folder, and -p creates any missing parent folders along the way. The ~ means your home folder, so the command works no matter where Terminal starts.', b:'Press Command+Space, type Terminal, and press Return. Terminal is the macOS app where you type commands. Then create one focused folder for your first project.', code:'mkdir -p ~/projects/my-first-claude-project', see:'The new project folder exists.', scene:['~/', '└── projects/', '    (empty)'], sim:[{req:['mkdir','my-first-claude-project'],key:true,out:'folder created: ~/projects/my-first-claude-project',scene:['~/', '└── projects/', '*    └── my-first-claude-project/  ← created']}] },
+      { h:'Point Terminal at the folder', where:'terminal', hint:'cd changes your current folder, and pwd prints where you are. Claude Code treats the current folder as the project, so this step decides what Claude can see.', b:'Change into the folder before starting Claude Code. The current folder becomes Claude’s working context.', code:'cd ~/projects/my-first-claude-project\npwd', see:'The printed path ends with my-first-claude-project.', scene:['~/  ← you are here', '└── projects/', '    └── my-first-claude-project/'], sim:[{req:['cd','my-first-claude-project'],key:true,out:'current folder: ~/projects/my-first-claude-project',scene:['~/', '└── projects/', '*    └── my-first-claude-project/  ← you are here']},{req:['pwd'],out:'/Users/you/projects/my-first-claude-project',scene:['~/', '└── projects/', '*    └── my-first-claude-project/  ← you are here']}] },
+      { h:'Install Claude Code', where:'terminal', hint:'The command downloads Anthropic’s installer and runs it. Read the official Claude Code setup page first so you know what the installer does, then confirm the install with claude --version.', b:'Use Anthropic’s macOS installer. Review official setup guidance before running remote install commands on your machine.', code:'curl -fsSL https://claude.ai/install.sh | bash\nclaude --version', see:'Claude Code installs and prints a version number.', sim:[{req:['curl','claude.ai/install.sh'],key:true,name:'curl -fsSL https://claude.ai/install.sh | bash',out:'Installing Claude Code...\nClaude Code installed successfully.'},{req:['claude --version'],out:'Claude Code 1.x.x'}] },
+      { h:'Open Claude Code in the project', where:'terminal', hint:'Run claude with no extra words. The first run opens a browser window to sign in; that is expected. After signing in, return to Terminal.', b:'Run claude while Terminal points at the project folder. Complete authentication if asked.', code:'claude', see:'Claude Code opens in the correct working directory.', scene:['my-first-claude-project/', '└── (no session)'], sim:[{req:['claude'],key:true,out:'Claude Code opened in ~/projects/my-first-claude-project\nAuthentication complete.',scene:['my-first-claude-project/', '*└── Claude Code session open in this folder']}] },
+      { h:'Generate CLAUDE.md with /init', where:'claude', hint:'Type /init at the Claude Code prompt, not in the macOS shell. Claude scans the project and writes CLAUDE.md with starter guidance you can edit.', b:'Inside Claude Code, run /init. Slash commands run in Claude Code, not in the macOS shell.', code:'/init', see:'A CLAUDE.md file appears in the project folder.', pad:'Write the slash command you will run and the file it creates.' },
+      { h:'Verify the project context', where:'claude', hint:'Ask the question exactly as written. A correct answer names your folder and mentions CLAUDE.md. If it names a different folder, quit and restart Claude Code from the right one.', b:'Ask Claude to name the folder and summarize the instructions it loaded. This catches folder mistakes before real work begins.', code:'What project folder are you working in, and what instructions did you load?', see:'Claude names the folder and references CLAUDE.md.', pad:'Write the verification question and what a correct answer must mention.' }
+    ],
+    tryit:'Create the real folder, open Claude Code inside it, run /init, then inspect the generated CLAUDE.md.',
+    checkpoint:'Clear this quest once CLAUDE.md exists inside the correct project folder.'
+  },
+  {
+    id:'work-profile', ready:true, xp:140, min:20, learn:{label:'Claude Code documentation', url:'https://code.claude.com/docs'},
+    title:'Teach Claude How to Work With You',
+    sub:'Turn CLAUDE.md into a concise, testable collaboration profile.',
+    why:'Claude can only follow working preferences that you make explicit. Useful instructions define evidence rules, decision boundaries, and what good collaboration looks like.',
+    steps:[
+      { h:'Understand what CLAUDE.md controls', hint:'Project CLAUDE.md travels with the project and applies to anyone who opens it there. Personal preferences belong in ~/.claude/CLAUDE.md, which applies to every project on your machine.', b:'CLAUDE.md holds durable project instructions, not every fact about you or each temporary task. In a shared repo, keep personal preferences in ~/.claude/CLAUDE.md instead.', pad:'Write one durable project instruction and one personal preference. Note where each belongs.', eg:'Project instruction: run the test after every content edit. Belongs in the project CLAUDE.md.\nPersonal preference: keep answers short unless I ask for depth. Belongs in ~/.claude/CLAUDE.md.' },
+      { h:'Name your communication preferences', hint:'Good preferences are testable behaviors, not moods. Be concise is testable. Be nice is not.', b:'Describe response behaviors that help you think and act.', pad:'Write two communication preferences as direct instructions to Claude.', eg:'- Lead with the answer, then the reasoning.\n- Ask one clarifying question when my request is ambiguous.' },
+      { h:'Set evidence and verification rules', hint:'Pick rules that match your real risks. If you work with facts that go stale, require verification. If you work with files, require inspection before claims.', b:'Tell Claude when to inspect files, verify claims, cite sources, or mark uncertainty.', code:'- Inspect real files before proposing changes.\n- Distinguish evidence, inference, and speculation.\n- Verify claims that may be outdated.', pad:'Write two verification rules that matter for your work.', eg:'- Quote the exact line when claiming what a file says.\n- Mark anything not checked this session as unverified.', check:[{any:['verif','check','inspect','source','cite','evidence','quote'],label:'a verification behavior'}] },
+      { h:'Keep key decisions with you', hint:'Choose decisions whose consequences you own: spending money, deleting work, contacting people, or changing direction.', b:'Define which judgment calls Claude must surface rather than make.', pad:'Name two decisions Claude should bring back to you before acting.', eg:'- Bring me any change that deletes or overwrites a file.\n- Bring me wording changes in anything published under my name.', check:[{any:['delete','overwrit','money','publish','send','contact','direction','name'],label:'a decision with consequences you own'}] },
+      { h:'Draft the profile section', hint:'Keep it under ten lines. Short profiles get followed; long ones get skimmed.', b:'Combine your preferences, evidence rules, and boundaries into a short How to Work With Me section.', code:'## How to Work With Me\n- Be direct and concise.\n- Inspect source files before making claims.\n- Surface tradeoffs before changing direction.\n- Mark uncertainty explicitly.', pad:'Draft your How to Work With Me section.', eg:'## How to Work With Me\n- Lead with the answer.\n- Inspect files before claiming what they contain.\n- Bring me decisions that delete work or change direction.\n- Mark uncertainty plainly.', check:[{any:['-','1.'],label:'list items'},{any:['verif','inspect','check','evidence','uncertain'],label:'an evidence rule'},{any:['bring','ask','surface','decision'],label:'a decision boundary'}], file:{ path:'CLAUDE.md', name:'how-to-work-with-me.md', head:'## How to Work With Me\n\n', note:'Download your section, then paste it into the CLAUDE.md inside your project folder. The download is named separately so it cannot replace your real CLAUDE.md by accident.' } },
+      { h:'Test the profile', where:'claude', hint:'Pick a request where the instruction visibly changes the output. If your rule says lead with the answer, ask a question and check what arrives first.', b:'Give Claude one small request that should trigger the new instructions. Observe the behavior instead of assuming it works.', see:'Claude follows at least one visible instruction.', pad:'Write your test request and the behavior you expect.', eg:'Test request: what does my CLAUDE.md tell you about how to answer me?\nExpected: the answer arrives first and names my rules.' },
+      { h:'Revise one instruction', hint:'Find the instruction Claude missed or half-followed. Rewrite it as one concrete behavior and test it again.', b:'Improve the smallest instruction that would make the collaboration clearer.', pad:'Record one instruction you revised and why the new version is clearer.', eg:'Before: be careful with facts.\nAfter: verify dates and numbers against a source before stating them.\nWhy: careful is a mood; verify is a behavior I can check.' }
+    ],
+    tryit:'Run one real request using the profile, then revise the smallest instruction that would improve the result.',
+    checkpoint:'Clear this quest once CLAUDE.md contains a tested How to Work With Me section.'
+  },
+  {
+    id:'esf-companion', ready:true, xp:160, min:15, learn:{label:'ESF Companion repository', url:'https://github.com/nmadrid27/esf-companion'},
+    title:'Add ESF Companion',
+    sub:'Choose the Cowork plugin or manual templates, then anchor the work.',
+    why:'A collaboration profile shapes how Claude works. ESF Companion shapes when AI should enter and how you record your judgment.',
+    branch:{cowork:'Cowork plugin',manual:'Manual templates'},
+    steps:[
+      { h:'Understand the ESF sequence', hint:'The order protects your thinking. If AI suggestions arrive before your position exists, the suggestions become the position.', b:'ESF starts with your thinking before AI enters: inquire, position, explore, make, then reflect.', code:'INQUIRE → POSITION → EXPLORE → MAKE → REFLECT', pad:'Explain why your position comes before AI suggestions.', eg:'Once I read a confident suggestion, it anchors me. Writing my position first keeps the comparison honest.' },
+      { h:'Install the Cowork plugin', path:'cowork', where:'desktop', hint:'Open Cowork inside Claude Desktop and look for plugin installation. Interface labels change; the outcome to confirm is ESF Companion listed as installed.', b:'In Claude Desktop, open Cowork and install ESF Companion. Cowork requires a Claude Pro, Max, Team, or Enterprise plan.', see:'ESF Companion appears as an installed Cowork plugin.', pad:'Note where you found the plugin and which Claude plan you use.' },
+      { h:'Open your project in Cowork', path:'cowork', where:'cowork', hint:'Point the Cowork session at the same folder from quest one, so the ESF state lives beside your work.', b:'Start a Cowork session and point it at the project folder from quest one.', see:'Cowork shows the correct project folder.', pad:'Write the folder path you opened in Cowork.' },
+      { h:'Start the ESF workspace', path:'cowork', where:'cowork', hint:'Run /esf-start once per project. It creates esf/companion-state.md, which tracks your phase between sessions.', b:'Run /esf-start. First-time setup creates workspace state in the selected folder.', code:'/esf-start', see:'esf/companion-state.md exists.', pad:'Write the command and state file it creates.' },
+      { h:'Check ESF status', path:'cowork', where:'cowork', hint:'Run /esf-status whenever you return to the project. It reports the current phase, the artifacts so far, and the next action.', b:'Run /esf-status to see the current phase, artifacts, and next action.', code:'/esf-status', see:'Cowork reports a phase and next action.', pad:'Record the phase and next action.' },
+      { h:'Download the manual templates', path:'manual', where:'browser', hint:'Download the repository as a ZIP from its GitHub page, unzip it, and copy only the two templates into your project.', b:'Download the ESF Companion repository ZIP and copy the Position Statement and Record of Resistance templates into your project.', code:'github.com/nmadrid27/esf-companion', see:'Both templates exist in your project.', pad:'Write where you saved both templates.' },
+      { h:'Write your Position Statement', path:'manual', hint:'Write it rough and fast. The statement protects a decision by existing before AI weighs in, not by being polished.', b:'Before asking AI for direction, record what you think, your questions, and what is non-negotiable.', see:'A rough Position Statement exists before AI enters.', pad:'Write where the statement lives and which decision it protects.', file:{ path:'esf/position.md', head:'# Position Statement\n\n' } },
+      { h:'Plan the manual record', path:'manual', hint:'Create the Record of Resistance the first time you reject or heavily revise a suggestion, and run the Five Questions before you call the work done.', b:'Record meaningful revisions or rejections, then apply the Five Questions before finishing.', code:'Can I defend this?\nIs this mine?\nDid I verify?\nWould I teach this?\nIs the disclosure honest?', pad:'Write when you will create a Record of Resistance and run the Five Questions.' },
+      { h:'Verify your stewardship record', hint:'Three records: your position before AI entered, your decisions about AI output, and your disclosure. Name a real location for each.', b:'Identify where your initial position, decisions about AI output, and final disclosure will be recorded.', pad:'List the three records you will keep.', eg:'Position: esf/position.md.\nDecisions: esf/record-of-resistance.md.\nDisclosure: the README footer.' }
+    ],
+    tryit:'Start the ESF process for a tiny project. Stop after your initial position exists.',
+    checkpoint:'Clear this quest once you can locate your position, decision record, and disclosure process.'
+  },
+  {
+    id:'first-project', ready:true, xp:200, min:30, learn:{label:'ESF Companion repository', url:'https://github.com/nmadrid27/esf-companion'},
+    title:'Complete Your First Small Project',
+    sub:'Choose a real project, direct the work, verify it, and disclose AI use.',
+    why:'Setup only matters when it supports real work. A small first project lets you practice directing Claude while retaining judgment.',
+    steps:[
+      { h:'Choose a finishable project', hint:'Small means one or two sessions, a clear finish line, and no new accounts or tools. Care means you will actually use the result.', b:'Pick something you care about that can finish in one or two sessions.', pad:'Name the project and explain why it is small enough to finish now.', eg:'Three finishable examples:\n- A one-page packing checklist for a trip you repeat.\n- A reading list page of your ten favorite books.\n- A script that renames the files in one messy folder.', file:{ paths:['esf/position.md','esf/record-of-resistance.md','DISCLOSURE.md','your-artifact'], mark:'THIS QUEST', note:'This quest builds these records around the artifact you choose. Each later step shows its own file when you reach it.' } },
+      { h:'Define done', hint:'Criteria are checks you can run, not feelings. Looks good is not a criterion. Opens on my phone is.', b:'Write the desired outcome and concrete completion criteria before building.', pad:'Write the desired outcome and three completion criteria.', eg:'Outcome: a packing checklist I reuse every trip.\nDone when: it covers every bag I pack, it prints on one page, and someone else can follow it without asking me anything.', check:[{any:['outcome','goal','want'],label:'a desired outcome'},{any:['done','when','criteri'],label:'completion language'}] },
+      { h:'Write your initial position', hint:'Write what you already think before asking. A few sentences on your approach, your open questions, and what is non-negotiable.', b:'Before asking Claude for direction, record what you already think, your approach, questions, and non-negotiables.', pad:'Write a short initial position.', eg:'I think one printed page beats an app. Open question: group items by bag or by category? Non-negotiable: no account, no install.', file:{ path:'esf/position.md', head:'# Initial Position\n\n' } },
+      { h:'Use AI to explore, not decide', where:'claude', hint:'The prompt asks for alternatives and tradeoffs while keeping the choice with you. Copy it, then write down which direction you take and why.', b:'Ask Claude to challenge your position, surface alternatives, and identify blind spots. You choose the direction.', code:'Challenge this position. Surface two alternatives and the tradeoffs, but do not choose for me.', pad:'Write the exploration prompt and the decision that remains yours.', eg:'Prompt: challenge my one-page plan and surface two alternatives with tradeoffs, but do not choose for me.\nMine: whether the final format is print or screen.' },
+      { h:'Make and record a decision', hint:'Record one suggestion, then what you did with it: accepted, revised, or rejected, and the reason in one sentence.', b:'Build the artifact and record at least one suggestion you accepted, revised, or rejected.', pad:'Record one AI suggestion, what you did with it, and why.', eg:'Claude suggested grouping items by destination type. Revised: I grouped by bag instead, because that is how I actually pack.', file:{ path:'esf/record-of-resistance.md', head:'# Record of Resistance\n\n' } },
+      { h:'Verify against your criteria', hint:'Check the artifact against each criterion from step two, one at a time. Test the behavior; do not assume it.', b:'Inspect the artifact against the criteria. Verify factual claims and test behavior that matters.', pad:'Record what you checked, the evidence, and one correction.', eg:'Checked: prints on one page. Evidence: print preview shows a single page. Correction: cut the toiletries section from twelve items to six.' },
+      { h:'Run the Five Questions', hint:'Answer honestly and attach one piece of evidence per answer. A no is useful: it names the remaining work.', b:'Answer the Five Questions honestly. Any no answer identifies work that still needs attention.', code:'Can I defend this?\nIs this mine?\nDid I verify?\nWould I teach this?\nIs the disclosure honest?', pad:'Answer each question and add one sentence of evidence.', eg:'Can I defend this? Yes: I chose the structure and tested the print layout myself.\nDid I verify? Yes: every category matches what I packed last trip.' },
+      { h:'Draft the disclosure', hint:'Four sentences are enough: what you directed, what AI contributed, what you changed, and what you verified.', b:'State what you directed, what AI contributed, what you changed, and what you verified.', pad:'Draft an honest AI collaboration disclosure.', eg:'I set the goal and structure. Claude drafted the checklist items. I cut six items and reordered the categories. I verified it prints on one page.', check:[{any:['direct','set','chose','decided'],label:'what you directed'},{any:['claude','ai'],label:'what AI contributed'},{any:['chang','revis','cut','reorder','edit','kept'],label:'what you changed'},{any:['verif','test','check'],label:'what you verified'}], file:{ path:'DISCLOSURE.md', head:'# AI Collaboration Disclosure\n\n', note:'Keep it beside your artifact, or ask Claude to save it as DISCLOSURE.md in the project.' } }
+    ],
+    tryit:'Finish the smallest useful version of your project. Keep the position, decision record, verification note, and disclosure beside it.',
+    checkpoint:'Clear this quest once the artifact, decision record, verification note, and disclosure draft exist.'
+  },
+  {
+    id:'steer-session', ready:true, xp:160, min:10, learn:{label:'Claude Code documentation', url:'https://code.claude.com/docs'},
+    title:'Steer the Session',
+    sub:'Read permission prompts, interrupt, plan first, and keep instructions durable.',
+    why:'Claude Code pauses for your judgment at permission prompts, and you can interrupt or redirect at any time. Steering in the moment is how the work stays yours.',
+    steps:[
+      { h:'Read every permission prompt', where:'claude', hint:'The prompt names the exact command or file edit. Read the action, not just the buttons. Decline anything you would not run yourself.', b:'Before Claude Code runs a command or edits a file, it shows a permission prompt naming the exact action. Read the action, then approve once, allow it for the session, or decline.', see:'You can restate what the prompt asked before you answered it.', pad:'Write your rule for prompts you will always stop and read in full.', eg:'I always read in full any prompt that deletes, overwrites, installs, or sends something off my machine.', check:[{any:['delete','overwrit','install','send','remove','network','remote'],label:'a risky action category'}] },
+      { h:'Interrupt with Esc', where:'claude', hint:'Esc stops the current action without ending the session. Use it the moment you see the wrong file or the wrong direction, then say what you want instead.', b:'Press Esc to stop Claude mid-action when the work drifts. Interrupting is normal steering, not rudeness. Redirect with a clearer instruction.', pad:'Describe one moment when you would interrupt instead of letting Claude finish.' },
+      { h:'Plan before changes with plan mode', where:'claude', hint:'Plan mode lets Claude read and propose but not change files. Approve the plan only when you can restate it in your own words.', b:'Press Shift+Tab until the mode indicator shows plan mode. Claude then researches and presents a plan, and changes no files until you approve.', code:'Shift+Tab', see:'Claude presents a plan and waits for approval before editing anything.', pad:'Name one task where you would require a plan before any file changes.' },
+      { h:'Start fresh with /clear', where:'claude', hint:'/clear empties the conversation, not your project. Files and CLAUDE.md remain. Use it when corrections pile up faster than progress.', b:'When a conversation collects dead ends, run /clear to reset it. CLAUDE.md persists, so your durable instructions survive the reset.', code:'/clear', see:'The conversation resets and CLAUDE.md instructions still load.', sim:[{req:['/clear'],key:true,out:'Conversation cleared. CLAUDE.md instructions remain loaded.'}] },
+      { h:'Promote repeated corrections into CLAUDE.md', where:'claude', hint:'Say the rule once, in CLAUDE.md, instead of twice per session. Then read the file yourself to confirm the wording is yours.', b:'If you give the same correction twice, make it durable. Ask Claude to add the rule to CLAUDE.md, then read the new line yourself to verify it.', code:'Add this rule to CLAUDE.md: surface tradeoffs before changing direction.', see:'CLAUDE.md contains the new rule, in your words.', pad:'Write one correction you would promote into CLAUDE.md.' }
+    ],
+    tryit:'In a real session, run one task in plan mode, read every permission prompt in full, and interrupt once on purpose to redirect.',
+    checkpoint:'Clear this quest once you have read a real permission prompt in full, interrupted once, and approved one plan before changes.'
+  },
+  {
+    id:'version-control', ready:true, xp:180, min:15, learn:{label:'Pro Git book', url:'https://git-scm.com/book'},
+    title:'Put the Project Under Version Control',
+    sub:'Create a git history, let Claude commit, and read every diff first.',
+    why:'Git records checkpoints you can return to. With AI editing your files, the diff is where your judgment lives: you read every change before it becomes history.',
+    steps:[
+      { h:'Understand what git protects', hint:'Without git, an overwritten file is gone. With git, every commit is a snapshot you can restore in one command.', b:'Git stores snapshots of your project called commits. If an edit goes wrong, you return to the last good snapshot. That safety net is what makes confident AI collaboration possible.', pad:'Name one risk git removes from working with AI on real files.', eg:'An AI edit overwrites my working version and I cannot get it back.' },
+      { h:'Initialize the repository', where:'terminal', hint:'git init runs once per project, inside the project folder. The .git folder it creates holds the entire history; you never edit it directly.', b:'Run git init once, inside the project folder. git status then reports what git sees.', code:'git init\ngit status', see:'git status reports a new repository with untracked files.', scene:['my-first-claude-project/', '├── CLAUDE.md', '└── (no history)'], sim:[{req:['git init'],key:true,out:'Initialized empty Git repository in ~/projects/my-first-claude-project/.git/',scene:['my-first-claude-project/', '*├── .git/   ← history lives here', '├── CLAUDE.md', '└── ...']},{req:['git status'],out:'On branch main\nUntracked files:\n  CLAUDE.md',scene:['my-first-claude-project/', '*├── .git/   ← history lives here', '├── CLAUDE.md', '└── ...']}] },
+      { h:'Ask Claude to commit', where:'claude', hint:'A clear message says what the checkpoint contains, like add packing checklist draft. You will read these messages later to find the snapshot you need.', b:'Direct Claude to stage your files and commit with a clear message. Claude shows the git commands before running them; this is the permission prompt from quest five doing its job.', code:'Stage my files and commit them with a clear message describing this checkpoint.', see:'Claude proposes git commands and waits for your approval.', pad:'Write the commit request you would give Claude.' },
+      { h:'Read the diff before approving', where:'claude', hint:'Read additions (+) and removals (-) file by file. Stop at anything you did not expect, and ask Claude why it changed before approving.', b:'Before approving any commit, say "Show me the full diff of what you are about to commit," then read it. Lines starting with + were added and lines starting with - were removed. Every changed line becomes part of the record. Do not approve changes you have not seen.', code:'--- a/CLAUDE.md\n+++ b/CLAUDE.md\n+## How to Work With Me\n+- Inspect source files before making claims.\n+- Surface tradeoffs before changing direction.', see:'You can name each file that changed and why.', pad:'Write your rule for what you always check in a diff.', eg:'I check that every changed file is one I expected, and I read each removed line before approving.' },
+      { h:'Verify the history', where:'terminal', hint:'git log --oneline shows one commit per line, newest first. If your message reads clearly here, future you can find the right snapshot.', b:'git log lists your commits, newest first. The history is the proof that your checkpoint exists.', code:'git log --oneline', see:'The log lists your commit with its message.', scene:['history:', '(run git log)'], sim:[{req:['git log'],key:true,out:'a1b2c3d docs: add CLAUDE.md work profile',scene:['history:', '*● a1b2c3d  docs: add CLAUDE.md work profile']}] }
+    ],
+    tryit:'Initialize git in your real project, have Claude make one commit, and read the entire diff before approving it.',
+    checkpoint:'Clear this quest once your project has a first commit whose diff you read before approving.'
+  },
+  {
+    id:'recover', ready:true, xp:180, min:15, learn:{label:'Pro Git book', url:'https://git-scm.com/book'},
+    title:'Recover When It Goes Wrong',
+    sub:'Stop, see what changed, revert what you do not want, and keep the lesson.',
+    why:'Wrong-file edits and broken results are a normal part of early AI collaboration. Recovery is a skill: stop the work, inspect the change, restore the good version, and turn the failure into a durable instruction.',
+    steps:[
+      { h:'Expect failure without panic', hint:'The sequence is stop, inspect, restore, improve the instructions. Decide it now so you do not invent it mid-mistake.', b:'Sooner or later Claude will edit the wrong file or produce a result that breaks something. The recovery sequence is always the same: stop, inspect, restore, then improve the instructions.', pad:'Write your first move when an output surprises you.', eg:'Stop the session and ask what changed before touching anything.' },
+      { h:'Stop and ask what changed', where:'claude', hint:'Get the complete list of changes before judging any single one. Partial information leads to reverting too much or too little.', b:'Press Esc to stop the work, then ask for an account of every change. Get the full list before deciding anything.', code:'Stop. List every file you changed in this session and why.', see:'Claude lists the changed files and the reason for each.', pad:'Write the question you will ask before deciding what to keep.' },
+      { h:'Inspect the damage', where:'terminal', hint:'git status is the list of changed files; git diff is the changed lines. The unwanted change is always findable in the diff.', b:'git status names the changed files, and git diff shows the changed lines. Read both before reverting anything.', code:'git status\ngit diff', see:'You can point to the exact lines you do not want.', scene:['changed files: ?'], sim:[{req:['git status'],key:true,out:'On branch main\nChanges not staged for commit:\n  modified: notes.md\n  modified: CLAUDE.md',scene:['changed files:', '*M notes.md', '*M CLAUDE.md']},{req:['git diff'],out:'--- a/notes.md\n+++ b/notes.md\n+unwanted line added by the session',scene:['notes.md:', '*+ unwanted line added by the session']}] },
+      { h:'Revert the file you do not want', where:'terminal', hint:'git restore affects only the file you name. Your other changes stay. Check git status afterward to confirm.', b:'git restore returns one file to its last committed version. Only the named file changes; everything else stays.', code:'git restore notes.md', see:'git status no longer lists the reverted file as modified.', scene:['changed files:', 'M notes.md   ← unwanted', 'M CLAUDE.md'], sim:[{req:['git restore','notes.md'],key:true,out:'notes.md restored to the last commit.',scene:['changed files:', '*M CLAUDE.md', '*(notes.md restored)']},{req:['git status'],out:'On branch main\nChanges not staged for commit:\n  modified: CLAUDE.md',scene:['changed files:', '*M CLAUDE.md', '*(notes.md restored)']}] },
+      { h:'Promote the lesson into CLAUDE.md', where:'claude', hint:'Write the rule in your own words and read the line back after Claude adds it. The mistake pays for itself when it cannot repeat.', b:'Finish every recovery by writing the rule that prevents the repeat. A mistake that produces a durable instruction was not wasted.', code:'Add this rule to CLAUDE.md: ask before editing notes.md.', see:'CLAUDE.md contains the new rule, in your words.', pad:'Write one rule born from a mistake you expect to make.', eg:'Ask before editing any file I did not name in the request.', check:[{any:['ask','before','without','never','always','only'],label:'a boundary word that makes the rule enforceable'}] }
+    ],
+    tryit:'In your real project, make a throwaway edit through Claude, inspect it with git diff, revert it with git restore, and add one rule to CLAUDE.md.',
+    checkpoint:'Clear this quest once you have inspected a change set, reverted one file, and added one rule born from a real mistake.'
+  }
+];
+
+// Quest log grouping. Each world renders as a collapsible drawer.
+const WORLDS = [
+  { title:'WORLD 1 · SETUP', ids:['claude-start','work-profile'] },
+  { title:'WORLD 2 · STEWARDSHIP', ids:['esf-companion','first-project'] },
+  { title:'WORLD 3 · CONTROL', ids:['steer-session','version-control','recover'] }
+];
+
+// Achievement badges. Each ties to a target behavior, not grind. Earned
+// badges persist alongside the rest of progress under the wa-progress key.
+const BADGES = [
+  { id:'power-on',   title:'POWER ON',        desc:'Clear quest one.' },
+  { id:'profiled',   title:'PROFILE WRITER',  desc:'Pass the profile draft structure check.' },
+  { id:'disclosed',  title:'FULL DISCLOSURE', desc:'Pass the four-part disclosure check.' },
+  { id:'archivist',  title:'ARCHIVIST',       desc:'Export or copy your field guide.' },
+  { id:'fine-print', title:'FINE PRINT',      desc:'Write your permission prompt rule.' },
+  { id:'restored',   title:'RESTORED',        desc:'Revert a file in the recovery sim.' },
+  { id:'operator',   title:'OPERATOR',        desc:'Clear all of World 3.' },
+  { id:'champion',   title:'ARCADE CHAMPION', desc:'Clear all seven quests.' }
+];
+
+/* ============================================================
+   PIXEL GUIDANCE  -  offline scripted guidance.
+   ============================================================ */
+function fallbackReply(history){
+  const last = (history[history.length-1]?.content || "").toLowerCase();
+  if(last.includes("start")||last.includes("begin")||last.includes("first"))
+    return "Start with quest one. Create a focused project folder, open Claude Code inside it, then run /init to create CLAUDE.md.";
+  if(last.includes("init")||last.includes("claude.md")||last.includes("profile"))
+    return "CLAUDE.md holds durable project instructions. Make each line actionable, test the profile, then revise what Claude misses.";
+  if(last.includes("cowork")||last.includes("plugin"))
+    return "The Cowork plugin is the guided ESF path. Open the project folder, run /esf-start, then use /esf-status to reorient.";
+  if(last.includes("esf")||last.includes("position"))
+    return "ESF keeps your position visible before AI enters. Your thinking comes first, then AI can challenge and support it.";
+  if(last.includes("plan mode")||last.includes("permission")||last.includes("interrupt")||last.includes("steer"))
+    return "Steering means reading each permission prompt before answering, pressing Esc when the work drifts, and requiring a plan before file changes.";
+  if(last.includes("git")||last.includes("commit")||last.includes("diff"))
+    return "Git gives you checkpoints. Let Claude run the commands, but read the full diff before you approve any commit.";
+  if(last.includes("undo")||last.includes("revert")||last.includes("recover")||last.includes("wrong file"))
+    return "Recovery is a sequence: stop with Esc, ask what changed, inspect with git diff, restore the file, then add the rule to CLAUDE.md.";
+  if(last.includes("verify")||last.includes("evidence"))
+    return "Verification means checking the artifact against criteria and inspecting evidence, not asking AI whether its own answer is correct.";
+  if(last.includes("disclosure"))
+    return "A useful disclosure says what you directed, what AI contributed, what you changed, and what you verified.";
+  const generic = [
+    "I am offline guidance, so my answers are scripted. The quests carry the full walkthrough.",
+    "Keep the leverage, keep the judgment. Write your position, evaluate suggestions, and verify what ships.",
+    "Use the next practice pad to make the decision concrete. A written rule beats a vague intention.",
+  ];
+  return generic[Math.floor(Math.random()*generic.length)];
+}
+/* ============================================================
+   APP  -  navigation, rendering, XP, chat flow
+   ============================================================ */
+const App = (function(){
+  const stage = document.getElementById('stage');
+  const modulesEl = document.getElementById('modules');
+  const logEl = document.getElementById('log');
+  const inputEl = document.getElementById('chatin');
+  const xpEl = document.getElementById('xpval');
+  const barEl = document.getElementById('progbar');
+  const barWrapEl = barEl.parentElement;
+  const toastEl = document.getElementById('toast');
+  const statusEl = document.getElementById('status');
+  const tutorEl = document.getElementById('tutor');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let xp = 0;
+  let done = {};            // completed module ids
+  let practiced = {};       // practiced[moduleId] = { stepIndex: true }
+  let stepAt = {};          // last viewed walkthrough position per module
+  let pads = {};            // practice pad text, keyed moduleId:stepIndex
+  let branchChoice = {};    // selected path per branching module
+  let openWorlds = {};      // quest-log drawer state per world index
+  let guide = [];           // saved field-guide entries, 'moduleId:stepIndex' keys
+  let badges = {};          // earned achievement badges, keyed by badge id
+  let soundOn = false;      // 8-bit feedback, default off
+  let oriented = false;     // first-run orientation card dismissed
+  let history = [];         // chat history for scripted guidance
+  let busy = false;
+
+  // ---- progress persistence ----
+  // Storage is unavailable in some previews. Both functions fail
+  // silently so the app runs in-memory when storage is off.
+  function loadProgress(){
+    try{
+      const raw = localStorage.getItem('wa-progress');
+      if(!raw) return;
+      const p = JSON.parse(raw);
+      if(typeof p.xp === 'number') xp = p.xp;
+      if(p.done && typeof p.done === 'object') done = p.done;
+      if(p.practiced && typeof p.practiced === 'object') practiced = p.practiced;
+      if(p.stepAt && typeof p.stepAt === 'object') stepAt = p.stepAt;
+      if(p.pads && typeof p.pads === 'object') pads = p.pads;
+      if(p.branchChoice && typeof p.branchChoice === 'object') branchChoice = p.branchChoice;
+      if(p.openWorlds && typeof p.openWorlds === 'object') openWorlds = p.openWorlds;
+      if(Array.isArray(p.guide)) guide = p.guide;
+      if(p.badges && typeof p.badges === 'object') badges = p.badges;
+      if(typeof p.soundOn === 'boolean') soundOn = p.soundOn;
+      if(typeof p.oriented === 'boolean') oriented = p.oriented;
+    }catch(e){ /* storage off: run in-memory */ }
+  }
+  function saveProgress(){
+    try{ localStorage.setItem('wa-progress', JSON.stringify({xp, done, practiced, stepAt, pads, branchChoice, openWorlds, guide, badges, soundOn, oriented})); }
+    catch(e){ /* storage off: skip */ }
+  }
+
+  const esc = s => s.replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+  function questBtn(m, activeId){
+    const i = MODULES.indexOf(m);
+    const tag = done[m.id] ? '<span class="tag done pixel">CLEARED</span>'
+              : m.ready ? '<span class="tag pixel">READY</span>'
+              : '<span class="tag pixel">SOON</span>';
+    const items = visibleSteps(m);
+    const pr = items.filter(({originalIndex})=>(practiced[m.id]||{})[originalIndex]).length;
+    return `<button class="quest ${m.ready?'':'locked'} ${activeId===m.id?'active':''}" onclick="App.openModule('${m.id}')" aria-current="${activeId===m.id?'step':'false'}">
+      <div class="num">${String(i+1).padStart(2,'0')}</div>
+      <div>
+        <div class="t">${esc(m.title)}</div>
+        <div class="s">${esc(m.sub)}</div>
+        ${pr&&!done[m.id]?`<div class="s">${pr} / ${items.length} steps practiced</div>`:''}
+        <div style="margin-top:6px">${tag} <span class="tag pixel" style="color:var(--muted)">~${m.min} MIN</span></div>
+      </div>
+    </button>`;
+  }
+
+  const worldOf = id => WORLDS.findIndex(w=>w.ids.includes(id));
+  let lastActive = null;
+
+  function renderModules(activeId){
+    lastActive = activeId;
+    const next = MODULES.find(m=>!done[m.id]);
+    const focusW = activeId ? worldOf(activeId) : (next ? worldOf(next.id) : 0);
+    modulesEl.innerHTML = '<h2 class="pixel">QUEST LOG</h2>' + WORLDS.map((w,wi)=>{
+      const open = (wi in openWorlds) ? openWorlds[wi] : wi===focusW;
+      const quests = w.ids.map(id=>MODULES.find(m=>m.id===id)).filter(Boolean);
+      const cleared = quests.filter(m=>done[m.id]).length;
+      return `<button class="world" onclick="App.toggleWorld(${wi})" aria-expanded="${open}">
+          <span>${esc(w.title)}</span><span class="wstat">${cleared}/${quests.length} ${open?'&#9662;':'&#9656;'}</span>
+        </button>
+        ${open?`<div class="wbody">${quests.map(m=>questBtn(m, activeId)).join('')}</div>`:''}`;
+    }).join('');
+  }
+
+  function toggleWorld(wi){
+    const next = MODULES.find(m=>!done[m.id]);
+    const focusW = lastActive ? worldOf(lastActive) : (next ? worldOf(next.id) : 0);
+    const cur = (wi in openWorlds) ? openWorlds[wi] : wi===focusW;
+    openWorlds[wi] = !cur;
+    saveProgress();
+    renderModules(lastActive);
+  }
+
+  function dismissOrient(){
+    oriented = true;
+    saveProgress();
+    goHome();
+  }
+
+  function goHome(){
+    curWalk = null;
+    renderModules(null);
+    PIX.setState('idle');
+    // resume from saved progress: next uncleared quest, with step when mid-walkthrough
+    const next = MODULES.find(m=>!done[m.id]);
+    const target = next || MODULES[0];
+    const started = Object.keys(done).length>0 || Object.values(stepAt).some(v=>v>0);
+    let cta = 'START QUEST 01';
+    if(!next) cta = 'REPLAY QUEST 01';
+    else if(started){
+      cta = `RESUME QUEST ${pad2n(MODULES.indexOf(next)+1)}`;
+      const v = stepAt[next.id]||0, N = visibleSteps(next).length;
+      if(v>=1 && v<=N) cta += ` &#183; STEP ${pad2n(v)}`;
+    }
+    const allCleared = MODULES.every(q=>done[q.id]);
+    stage.innerHTML = `
+      <div class="hero">
+        <div class="pixwrap"><div class="pixscreen" style="background:transparent;border:none;box-shadow:none">
+          <canvas id="heroPix" width="220" height="220"></canvas>
+        </div></div>
+        <h3>WORKFLOW <b>ARCADE</b></h3>
+        <p>Learn Claude Code inside real work. Set up a project, define the collaboration, add ESF Companion, and finish something you can defend.</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:8px">
+          <button class="btn" onclick="App.openModule('${target.id}')">${cta}</button>
+          <button class="btn ghost" onclick="App.say('what should I learn first?')">ASK PIXEL</button>
+          ${allCleared?`<button class="btn mint" onclick="App.openCert()">GET CERTIFICATE</button>`:''}
+        </div>
+        ${oriented?'':`<div class="why" style="max-width:560px;text-align:left;margin-top:18px"><b>HOW THIS ARCADE WORKS</b><br>Pick a quest from the map or the log. Each quest walks one step at a time, and every step has a practice pad or a safe simulated terminal. Practicing banks XP, HINT asks PIXEL for help, CHECK ANSWER reviews your pad, and + GUIDE keeps any step in your exportable field guide.<div style="margin-top:12px"><button class="btn mint" onclick="App.dismissOrient()">GOT IT</button></div></div>`}
+        ${questMapHtml()}
+        ${badgeCaseHtml()}
+      </div>`;
+    mirrorHeroAvatar();
+    drawMap();
+  }
+
+  /* ---- quest map: an overworld path on the home screen. The canvas paints
+     the zone bands and the dotted trail between quests; the node buttons sit
+     on top and carry all interaction and accessibility. ---- */
+  // node centers as fractions of the canvas, one per MODULES entry, left to right
+  const MAP_NODES = [ {x:.08,y:.62}, {x:.20,y:.38}, {x:.34,y:.60}, {x:.48,y:.36}, {x:.62,y:.60}, {x:.76,y:.38}, {x:.90,y:.58} ];
+
+  // the current quest is the first uncleared one; everything before it is cleared
+  function mapState(m){
+    if(done[m.id]) return 'cleared';
+    const next = MODULES.find(q=>!done[q.id]);
+    return (next && next.id===m.id) ? 'current' : 'future';
+  }
+
+  // build one node button. Named mapNode so the helper reads as a single node.
+  const mapNode = (m,i)=>{
+    const st = mapState(m);
+    const n = MAP_NODES[i] || {x:.5,y:.5};
+    const glyph = st==='cleared' ? '&#10003;' : String(i+1).padStart(2,'0');
+    const stateLabel = st==='cleared' ? 'cleared' : st==='current' ? 'up next' : 'not started';
+    // the current node pulses via the .current CSS class; the reduced-motion block kills that animation globally
+    return `<button class="mapnode ${st}" style="left:${(n.x*100).toFixed(2)}%;top:${(n.y*100).toFixed(2)}%"
+        onclick="App.openModule('${m.id}')"
+        aria-label="Quest ${i+1}: ${esc(m.title)}, ${stateLabel}">
+        <span aria-hidden="true">${glyph}</span>
+        <span class="nlabel">${esc(m.title)}</span>
+      </button>`;
+  };
+
+  function questMapHtml(){
+    return `<div class="badgewrap">
+        <div class="badgehead pixel">QUEST MAP</div>
+        <div class="mapwrap">
+          <canvas id="mapcv" width="560" height="200" aria-hidden="true"></canvas>
+          ${MODULES.map(mapNode).join('')}
+        </div>
+      </div>`;
+  }
+
+  // paint the decorative trail and zone bands. Nodes are drawn by the buttons.
+  function drawMap(){
+    const cv = document.getElementById('mapcv');
+    if(!cv) return;   // map is absent on non-home views
+    const ctx = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    ctx.clearRect(0,0,W,H);
+    // three zone bands, one per world, with very low-alpha tints
+    const tints = ['rgba(255,194,75,.05)','rgba(95,214,166,.05)','rgba(255,138,165,.05)'];
+    for(let z=0;z<3;z++){ ctx.fillStyle = tints[z]; ctx.fillRect(z*W/3, 0, W/3, H); }
+    // dotted trail: small filled squares stepped along each segment, pixel feel
+    const pt = n => ({ x:n.x*W, y:n.y*H });
+    for(let i=0;i<MAP_NODES.length-1;i++){
+      const a = pt(MAP_NODES[i]), b = pt(MAP_NODES[i+1]);
+      const cleared = done[MODULES[i].id] && done[MODULES[i+1].id];
+      ctx.fillStyle = cleared ? '#5fd6a6' : '#3a2f5e';
+      const dist = Math.hypot(b.x-a.x, b.y-a.y);
+      const steps = Math.max(2, Math.round(dist/12));
+      for(let s=0;s<=steps;s++){
+        const t = s/steps;
+        const x = Math.round(a.x + (b.x-a.x)*t);
+        const y = Math.round(a.y + (b.y-a.y)*t);
+        ctx.fillRect(x-2, y-2, 4, 4);
+      }
+    }
+    // zone titles in tiny Press Start 2P at the top of each band
+    const titles = ['WORLD 1','WORLD 2','WORLD 3'];
+    const paintTitles = ()=>{
+      ctx.fillStyle = '#9a8fc4';
+      ctx.font = '8px "Press Start 2P", monospace';
+      ctx.textAlign = 'center';
+      for(let z=0;z<3;z++){ ctx.fillText(titles[z], (z+0.5)*W/3, 18); }
+    };
+    paintTitles();
+    // fonts may load late: repaint the titles once they arrive, no crash if slow
+    if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=>{ if(document.getElementById('mapcv')===cv) paintTitles(); });
+  }
+
+  // badge case for the home hero: earned badges lit, unearned dim with a lock
+  function badgeCaseHtml(){
+    const earned = BADGES.filter(b=>badges[b.id]).length;
+    return `<div class="badgewrap">
+        <div class="badgehead pixel">BADGES <span style="color:var(--amber)">${earned}</span> / ${BADGES.length}</div>
+        <div class="badgegrid">${BADGES.map(b=>{
+          const got = !!badges[b.id];
+          return `<div class="badge ${got?'earned':''}">
+              <div class="bt">${got?'':'<span class="lock">&#9632;</span> '}${esc(b.title)}</div>
+              <div class="bd">${esc(b.desc)}</div>
+            </div>`;
+        }).join('')}</div>
+      </div>`;
+  }
+
+  // draw the same PIX onto the hero canvas by cloning the live one each frame
+  function mirrorHeroAvatar(){
+    const src = document.getElementById('pix');
+    const dst = document.getElementById('heroPix');
+    if(!dst) return;
+    const dctx = dst.getContext('2d');
+    (function loop(){
+      // stop if the live hero canvas is no longer this exact node (goHome re-rendered a new one)
+      if(document.getElementById('heroPix') !== dst) return;
+      dctx.imageSmoothingEnabled=false;
+      dctx.clearRect(0,0,dst.width,dst.height);
+      dctx.drawImage(src,0,0,dst.width,dst.height);
+      if(!reduceMotion) requestAnimationFrame(loop);
+    })();
+  }
+
+  function openModule(id){
+    const m = MODULES.find(x=>x.id===id);
+    PIX.nudge();
+    if(!m) return;
+    openWorlds[worldOf(id)] = true;   // opening a quest reveals its world
+    renderModules(id);
+    if(!m.ready){ renderTeaser(m); return; }
+    if(m.branch && !branchChoice[m.id]) renderBranchChoice(m);
+    else renderWalk(m, stepAt[m.id]||0);   // resume where the learner left off
+    if(window.innerWidth<=980) window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  function renderTeaser(m){
+    curWalk = null;
+    stage.innerHTML = `
+      <div class="lesson">
+        <h3 class="title">${esc(m.title)}</h3>
+        <div class="why"><b>WHAT THIS IS</b><br>${esc(m.teaser || m.sub)}</div>
+        <div style="text-align:center;padding:18px 0">
+          <div class="pixel" style="font-size:11px;color:var(--rose);margin-bottom:14px">QUEST LOADING SOON</div>
+          <button class="btn ghost" onclick="App.say('tell me about the ${esc(m.title)} quest')">ASK PIXEL ABOUT IT</button>
+          <button class="btn" onclick="App.openModule('claude-start')" style="margin-left:10px">PLAY QUEST 01</button>
+        </div>
+      </div>`;
+    pixLine(`That quest is still loading. ${m.title} is worth the wait. Want the gist now?`);
+  }
+
+  /* ---- walkthrough: one step at a time, with practice sandbox ----
+     View index v: 0 = intro, 1..N = steps, N+1 = finish card. */
+  const pad2n = n => String(n).padStart(2,'0');
+  const visibleSteps = m => m.steps
+    .map((step, originalIndex)=>({step, originalIndex}))
+    .filter(item=>!item.step.path || item.step.path===branchChoice[m.id]);
+
+  function renderBranchChoice(m){
+    curWalk = null;
+    stage.innerHTML = `
+      <div class="lesson">
+        <h3 class="title">${esc(m.title)}</h3>
+        <div class="why"><b>CHOOSE YOUR PATH</b><br>Both paths teach the same stewardship process. The Cowork plugin guides the workflow; manual templates keep the practice tool-agnostic.</div>
+        <div class="branch-grid">
+          <button class="btn branch-card" onclick="App.choosePath('${m.id}','cowork')"><b>COWORK PLUGIN</b>Guided commands, workspace state, and status checks.</button>
+          <button class="btn ghost branch-card" onclick="App.choosePath('${m.id}','manual')"><b>MANUAL TEMPLATES</b>Position, decision records, Five Questions, and disclosure without a plugin.</button>
+        </div>
+      </div>`;
+  }
+
+  function choosePath(id, path){
+    const m = MODULES.find(x=>x.id===id);
+    if(!m || !m.branch || !m.branch[path]) return;
+    branchChoice[id] = path;
+    stepAt[id] = 0;
+    saveProgress();
+    announce(`${m.branch[path]} path selected`);
+    renderWalk(m, 0);
+  }
+
+  let curWalk = null;   // {id, v} while a walkthrough is on screen; arrow keys navigate
+
+  function renderWalk(m, v){
+    const N = visibleSteps(m).length;
+    v = Math.max(0, Math.min(v, N+1));
+    curWalk = {id:m.id, v};
+    stepAt[m.id] = v; saveProgress();
+    if(v===0) return renderIntro(m);
+    if(v>N) return renderFinish(m);
+    renderStep(m, v);
+  }
+
+  function dotsHtml(m, v){
+    return '<div class="wdots">'+visibleSteps(m).map(({step, originalIndex},i)=>{
+      const pr = (practiced[m.id]||{})[originalIndex];
+      return `<i class="${v===i+1?'on':(pr?'pr':'')}" title="${pad2n(i+1)}: ${esc(step.h)}"></i>`;
+    }).join('')+'</div>';
+  }
+
+  function renderIntro(m){
+    stage.innerHTML = `
+      <div class="lesson">
+        <h3 class="title">${esc(m.title)}</h3>
+        <div class="why"><b>WHY THIS MATTERS</b><br>${esc(m.why)}</div>
+        ${dotsHtml(m,0)}
+        ${m.branch?`<div class="stepmeta">PATH: ${esc(m.branch[branchChoice[m.id]])} <button class="btn ghost" style="padding:7px;font-size:7px" onclick="App.changePath('${m.id}')">CHANGE PATH</button></div>`:''}
+        <p style="color:var(--muted)">${visibleSteps(m).length} steps, one at a time. Each step has a practice sandbox. Practicing banks bonus XP.</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <button class="btn" onclick="App.walk('${m.id}',1)">START STEPS</button>
+          <button class="btn ghost" onclick="App.walk('${m.id}',${visibleSteps(m).length+1})">SKIP TO CHECKPOINT</button>
+        </div>
+      </div>`;
+  }
+
+  function renderStep(m, v){
+    const items = visibleSteps(m);
+    const N = items.length;
+    const {step:s, originalIndex} = items[v-1];
+    const isPr = (practiced[m.id]||{})[originalIndex];
+    stage.innerHTML = `
+      <div class="lesson">
+        <h3 class="title">${esc(m.title)}</h3>
+        <div class="stepmeta">${s.where?`<span class="where pixel">${esc(WHERE_LABELS[s.where]||s.where)}</span>`:''}STEP ${pad2n(v)} / ${pad2n(N)} <span class="pr" id="prtag">${isPr?'PRACTICED &#10003;':''}</span></div>
+        ${dotsHtml(m,v)}
+        <div class="st" style="font-size:13px;margin:16px 0 8px">${esc(s.h)}</div>
+        <div style="font-size:21px">${esc(s.b)}</div>
+        ${s.code?`<div class="codewrap"><pre class="code">${esc(s.code)}</pre><button class="copy" onclick="App.copyCode(this)" aria-label="Copy to clipboard">COPY</button></div>`:''}
+        ${s.see?`<div class="see">&#9656; You should see: ${esc(s.see)}</div>`:''}
+        ${sandboxHtml(m, originalIndex, s)}
+        ${s.file?fileBoxHtml(m, originalIndex, s):''}
+        <div class="walknav">
+          <button class="btn ghost" onclick="App.walk('${m.id}',${v-1})">&#9664; BACK</button>
+          <button class="btn ghost" onclick="App.hint('${m.id}',${originalIndex})">HINT</button>
+          <button class="btn ghost" id="gsave" onclick="App.toggleGuideStep('${m.id}',${originalIndex})">${guide.includes(m.id+':'+originalIndex)?'IN GUIDE &#10003;':'+ GUIDE'}</button>
+          <button class="btn next" onclick="App.walk('${m.id}',${v+1})">${v===N?'FINISH':'NEXT'} &#9654;</button>
+        </div>
+      </div>`;
+    wireSandbox(m, originalIndex, s);
+  }
+
+  /* ---- on-your-machine panel: where a step's artifact lives, plus a
+     real download built from the learner's pad text. The app cannot
+     write into the project folder; the learner places the file. ---- */
+  // sim state panel: lines starting with * render amber (changed state)
+  function renderScene(lines){
+    return lines.map(l=>l.startsWith('*')?'<b>'+esc(l.slice(1))+'</b>':esc(l)).join('\n');
+  }
+
+  function fileTree(f){
+    const paths = f.paths || [f.path];
+    const mark = ' <b>&#8592; '+esc(f.mark||'THIS STEP')+'</b>';
+    let out = '~/projects/my-first-claude-project/\n';
+    out += '&#9500;&#9472;&#9472; CLAUDE.md' + (paths.includes('CLAUDE.md')?mark:'') + '\n';
+    const esf = paths.filter(p=>p.startsWith('esf/'));
+    const root = paths.filter(p=>p!=='CLAUDE.md' && !p.startsWith('esf/'));
+    if(esf.length){
+      out += '&#9500;&#9472;&#9472; esf/\n';
+      esf.forEach((p,i)=>{ out += '&#9474;   '+(i===esf.length-1?'&#9492;':'&#9500;')+'&#9472;&#9472; '+esc(p.slice(4))+mark+'\n'; });
+    }
+    root.forEach((p,i)=>{ out += (i===root.length-1?'&#9492;':'&#9500;')+'&#9472;&#9472; '+esc(p)+mark+'\n'; });
+    if(!root.length) out += '&#9492;&#9472;&#9472; ...\n';
+    return out.trimEnd();
+  }
+
+  function fileBoxHtml(m, idx, s){
+    const f = s.file;
+    const dlName = f.name || (f.path||'').split('/').pop();
+    const note = f.note || (f.head ? 'Then move it into your project folder, or ask Claude to save it as '+f.path+'.' : '');
+    return `<div class="sandbox">
+      <div class="sbtitle" style="color:var(--mint)">ON YOUR MACHINE <span class="sbhint">${f.head?'built from your pad text':'what this creates'}</span></div>
+      <pre class="ftree">${fileTree(f)}</pre>
+      <div class="egwrap">
+        ${f.head?`<button class="egbtn check" onclick="App.downloadStepFile('${m.id}',${idx})">DOWNLOAD ${esc(dlName).toUpperCase()}</button>`:''}
+        ${note?`<div style="font-size:18px;color:var(--muted);margin-top:${f.head?'8px':'0'}">${esc(note)}</div>`:''}
+      </div>
+    </div>`;
+  }
+
+  function downloadStepFile(mid, idx){
+    const m = MODULES.find(x=>x.id===mid);
+    if(!m) return;
+    const f = m.steps[idx] && m.steps[idx].file;
+    if(!f || !f.head) return;
+    const text = (pads[mid+':'+idx]||'').trim();
+    if(!text){ toast('WRITE IN THE PAD FIRST'); return; }
+    const blob = new Blob([f.head + text + '\n'], {type:'text/markdown'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = f.name || f.path.split('/').pop();
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast('FILE DOWNLOADED');
+    announce('file downloaded: '+a.download);
+  }
+
+  function sandboxHtml(m, idx, s){
+    if(s.sim) return `
+      <div class="sandbox">
+        <div class="sbtitle">PRACTICE TERMINAL <span class="sbhint">simulated and safe. Type the command, or "help"</span></div>
+        ${s.scene?`<pre class="ftree simviz" id="simviz">${renderScene(s.scene)}</pre>`:''}
+        <div class="termout" id="termout"></div>
+        <div class="termrow"><span class="prompt">${s.where==='claude'?'&gt;':'$'}</span><input id="termin" autocomplete="off" spellcheck="false" aria-label="practice terminal input"></div>
+      </div>`;
+    if(s.pad) return `
+      <div class="sandbox">
+        <div class="sbtitle">PRACTICE PAD <span class="sbhint" id="padhint">saved on this device</span></div>
+        <textarea id="padin" placeholder="${esc(s.pad)}" aria-label="practice pad">${esc(pads[m.id+':'+idx]||'')}</textarea>
+        <div class="egwrap">
+          <button class="egbtn check" onclick="App.checkPad('${m.id}',${idx})">CHECK ANSWER</button>
+          ${s.eg?`<button class="egbtn" onclick="App.toggleEg(this)" aria-expanded="false">SHOW EXAMPLE</button><div class="eg" hidden>${esc(s.eg)}</div>`:''}
+          <div class="padfb" id="padfb" aria-live="polite"></div>
+        </div>
+      </div>`;
+    return '';
+  }
+
+  function wireSandbox(m, idx, s){
+    if(s.sim){
+      const out = document.getElementById('termout');
+      const input = document.getElementById('termin');
+      if(!input) return;
+      const echo = (t,cls)=>{ const d=document.createElement('div'); if(cls) d.className=cls; d.textContent=t; out.appendChild(d); out.scrollTop=out.scrollHeight; };
+      const glyph = s.where==='claude' ? '>' : '$';
+      let lastCmd='', misses=0;
+      echo('sim terminal ready. Commands are simulated. Nothing runs on your machine.','dim');
+      input.addEventListener('keydown', e=>{
+        if(e.key==='ArrowUp'){ input.value=lastCmd; e.preventDefault(); return; }
+        if(e.key!=='Enter') return;
+        const raw = input.value.trim(); input.value='';
+        if(!raw) return;
+        lastCmd=raw;
+        echo(glyph+' '+raw,'cmd');
+        const n = raw.toLowerCase().replace(/\s+/g,' ');
+        if(n==='clear'){ out.innerHTML=''; return; }
+        if(n==='help'){ echo('This step recognizes:\n'+s.sim.map(r=>'  '+(r.name||r.req.join(' '))).join('\n')); return; }
+        const rule = s.sim.find(r=>r.req.every(q=>n.includes(q)));
+        if(rule){ misses=0; echo(rule.out); if(rule.scene){ const vz=document.getElementById('simviz'); if(vz) vz.innerHTML=renderScene(rule.scene); } if(rule.key) markPracticed(m, idx); }
+        else if(++misses>=2){
+          const keyRule = s.sim.find(r=>r.key)||s.sim[0];
+          echo('sim: not recognized. This step expects:\n  '+(keyRule.name||keyRule.req.join(' ')),'dim');
+        }
+        else echo('sim: not recognized here. Type "help" to see what this step expects.','dim');
+      });
+    }
+    if(s.pad){
+      const ta = document.getElementById('padin');
+      if(!ta) return;
+      const key = m.id+':'+idx;
+      const hintEl = document.getElementById('padhint');
+      const updateHint = ()=>{
+        if(!hintEl) return;
+        const len = ta.value.trim().length;
+        const banked = (practiced[m.id]||{})[idx];
+        hintEl.textContent = (banked || !len) ? 'saved on this device'
+          : len<20 ? 'saved. keep writing, then check your answer'
+          : 'saved. press CHECK ANSWER to bank XP';
+      };
+      updateHint();
+      ta.addEventListener('input', ()=>{
+        pads[key]=ta.value;
+        saveProgress();
+        updateHint();
+      });
+    }
+  }
+
+  function markPracticed(m, idx){
+    practiced[m.id] = practiced[m.id]||{};
+    if(practiced[m.id][idx]) return;
+    practiced[m.id][idx] = true;
+    xp += 5;
+    xpEl.textContent = xp;
+    saveProgress();
+    toast('+5 XP  STEP PRACTICED');
+    sfxPractice();
+    PIX.celebrate();
+    const tag = document.getElementById('prtag');
+    if(tag) tag.innerHTML = 'PRACTICED &#10003;';
+    if(m.id==='recover' && m.steps[idx] && m.steps[idx].h==='Revert the file you do not want') award('restored');
+  }
+
+  function renderFinish(m){
+    const cleared = done[m.id];
+    const items = visibleSteps(m);
+    const prCount = items.filter(({originalIndex})=>(practiced[m.id]||{})[originalIndex]).length;
+    stage.innerHTML = `
+      <div class="lesson">
+        <h3 class="title">${esc(m.title)}</h3>
+        ${dotsHtml(m, items.length+1)}
+        <div class="stepmeta" style="margin-top:10px">${prCount} / ${items.length} STEPS PRACTICED &#183; ${items.filter(({originalIndex})=>(pads[m.id+':'+originalIndex]||'').trim()).length} NOTES WRITTEN</div>
+        <div class="tryit"><b>TRY IT</b><br>${esc(m.tryit)}</div>
+        <div class="checkpoint">
+          <button class="btn ${cleared?'ghost':'mint'}" onclick="App.complete('${m.id}')">
+            ${cleared?'CLEARED &#10003;':'MARK QUEST COMPLETE'}
+          </button>
+          <span style="color:var(--muted);font-size:18px">${esc(m.checkpoint)}</span>
+        </div>
+        <div class="walknav">
+          <button class="btn ghost" onclick="App.walk('${m.id}',${items.length})">&#9664; BACK TO STEPS</button>
+          ${m.learn?`<a class="btn ghost" style="text-decoration:none" href="${m.learn.url}" target="_blank" rel="noopener">LEARN MORE: ${esc(m.learn.label).toUpperCase()} &#8599;</a>`:''}
+          ${Object.keys(done).length===MODULES.length?`<button class="btn mint" onclick="App.openCert()">GET CERTIFICATE</button>`:''}
+        </div>
+      </div>`;
+  }
+
+  function walk(id, v){
+    const m = MODULES.find(x=>x.id===id);
+    if(!m || !m.ready) return;
+    PIX.nudge();
+    renderModules(id);
+    renderWalk(m, v);
+  }
+
+  function changePath(id){
+    delete branchChoice[id];
+    stepAt[id] = 0;
+    saveProgress();
+    renderBranchChoice(MODULES.find(x=>x.id===id));
+  }
+
+  function hint(id, idx){
+    const m = MODULES.find(x=>x.id===id);
+    if(!m) return;
+    const s = m.steps[idx];
+    if(s.hint){   // step-specific guidance beats keyword matching
+      if(window.innerWidth<=980) setChatOpen(true);
+      PIX.nudge();
+      pixLine(s.hint);
+      return;
+    }
+    say(`Walk me through the step "${s.h}" from ${m.title} in more detail.`);
+  }
+
+  // award a badge once, with celebration. Tied to target behaviors, not grind.
+  function award(id){
+    if(badges[id]) return;
+    const b = BADGES.find(x=>x.id===id);
+    if(!b) return;
+    badges[id]=true;
+    saveProgress();
+    toast('BADGE EARNED  '+b.title);
+    sfxClear();
+    PIX.celebrate();
+  }
+
+  function complete(id){
+    const m = MODULES.find(x=>x.id===id);
+    if(done[id]){ pixLine("Already cleared this one. Pick the next quest from the log."); return; }
+    done[id]=true;
+    xp += (m.xp||100);
+    saveProgress();
+    xpEl.textContent = xp;
+    const pct = Math.round(Object.keys(done).length / MODULES.length * 100);
+    barEl.style.width = pct+'%';
+    barWrapEl.setAttribute('aria-valuenow',pct);
+    toast(`+${m.xp} XP  QUEST CLEARED`);
+    sfxClear();
+    pixCheer();
+    if(id==='claude-start') award('power-on');
+    if(WORLDS[2].ids.every(qid=>done[qid])) award('operator');
+    if(MODULES.every(q=>done[q.id])) award('champion');
+    renderModules(id);
+    renderWalk(m, visibleSteps(m).length+1);
+  }
+
+  /* ---- chat ---- */
+  function addMsg(who, cls){
+    const d = document.createElement('div');
+    d.className = 'msg '+cls;
+    d.innerHTML = `<span class="who">${who}</span><span class="body"></span>`;
+    logEl.appendChild(d);
+    logEl.scrollTop = logEl.scrollHeight;
+    return d.querySelector('.body');
+  }
+  function pixLine(text, onDone){ // instant PIXEL line (no model call)
+    const body = addMsg('PIXEL','pix');
+    typeOut(body, text, onDone);
+  }
+  function typeOut(node, text, onDone){
+    if(reduceMotion){ node.textContent=text; logEl.scrollTop=logEl.scrollHeight; if(onDone) onDone(); return; }
+    PIX.setState('talk');
+    let i=0;
+    (function tick(){
+      node.textContent = text.slice(0,i);
+      logEl.scrollTop = logEl.scrollHeight;
+      i++;
+      if(i<=text.length){ setTimeout(tick, 16); }
+      else { PIX.setState('idle'); if(onDone) onDone(); }
+    })();
+  }
+  function thinkingBubble(){
+    const body = addMsg('PIXEL','pix');
+    body.innerHTML = '<span class="dots"><span>&#9632;</span><span>&#9632;</span><span>&#9632;</span></span>';
+    return body.parentElement;
+  }
+
+  const wait = ms => new Promise(r=>setTimeout(r, ms));
+
+  async function say(text){
+    if(busy) return;
+    const t = (text!=null?text:inputEl.value).trim();
+    if(!t) return;
+    inputEl.value='';
+    busy=true;
+    if(window.innerWidth<=980) setChatOpen(true);   // replies land in a hidden panel otherwise
+    PIX.nudge();
+    const me = addMsg('YOU','me'); me.textContent = t;
+    history.push({role:'user', content:t});
+
+    PIX.setState('think');
+    const bubble = thinkingBubble();
+    const reply = fallbackReply(history);
+
+    // real pause so the thinking dots and PIX 'think' state are visible
+    await wait(350 + Math.random()*300);
+    bubble.remove();
+
+    history.push({role:'assistant', content:reply});
+    const body = addMsg('PIXEL','pix');
+    typeOut(body, reply, ()=>{ busy=false; });   // unblock only when typing finishes
+  }
+
+  function pixCheer(){
+    const lines = ["Quest cleared. That is real skill banked.","Nice. You just did the thing most people only read about.","Cleared. Your future self thanks you."];
+    pixLine(lines[Math.floor(Math.random()*lines.length)], ()=>PIX.celebrate());
+  }
+  function toast(msg){
+    toastEl.textContent = msg; toastEl.classList.add('show');
+    announce(msg);
+    setTimeout(()=>toastEl.classList.remove('show'), 1800);
+  }
+  // Scripted structural check. PIXEL is offline, so this verifies that
+  // expected elements are present, not that the answer is understood.
+  function checkPad(mid, idx){
+    const m = MODULES.find(x=>x.id===mid);
+    if(!m) return;
+    const s = m.steps[idx];
+    const ta = document.getElementById('padin');
+    const fb = document.getElementById('padfb');
+    if(!ta || !fb) return;
+    const text = ta.value.trim();
+    if(text.length<20){
+      fb.className='padfb miss';
+      fb.textContent='Write a little more first. One or two full sentences give the check something to work with.';
+      return;
+    }
+    const low = text.toLowerCase();
+    const missing = (s.check||[]).filter(g=>!g.any.some(t=>low.includes(t))).map(g=>g.label);
+    if(missing.length){
+      fb.className='padfb miss';
+      fb.textContent='This check reads structure, not understanding. Not found yet: '+missing.join(', ')+'.';
+      return;
+    }
+    fb.className='padfb ok';
+    fb.textContent = (s.check&&s.check.length)
+      ? 'Structure check passed: '+s.check.map(g=>g.label).join(', ')+'. Real validation happens when you test it with Claude.'
+      : 'Saved and substantial. Real validation happens when you test it with Claude.';
+    markPracticed(m, idx);
+    if(mid==='work-profile' && s.h==='Draft the profile section') award('profiled');
+    if(mid==='first-project' && s.h==='Draft the disclosure') award('disclosed');
+    if(mid==='steer-session' && s.h==='Read every permission prompt') award('fine-print');
+  }
+
+  /* ---- field guide: learner-curated keepsakes, exportable ---- */
+  function updateGuideCount(){
+    const el = document.getElementById('gcount');
+    if(el) el.textContent = guide.length;
+  }
+  function toggleGuideStep(mid, idx){
+    const k = mid+':'+idx;
+    const i = guide.indexOf(k);
+    if(i>=0) guide.splice(i,1); else guide.push(k);
+    saveProgress();
+    updateGuideCount();
+    toast(i>=0?'REMOVED FROM GUIDE':'SAVED TO GUIDE');
+    const b = document.getElementById('gsave');
+    if(b) b.innerHTML = i>=0?'+ GUIDE':'IN GUIDE &#10003;';
+    if(document.getElementById('guideview')) openGuide();
+  }
+  function guideMarkdown(){
+    let out = '# Workflow Arcade Field Guide\n';
+    MODULES.forEach(m=>{
+      const ks = guide.filter(k=>k.startsWith(m.id+':'));
+      if(!ks.length) return;
+      out += `\n## ${m.title}\n`;
+      ks.forEach(k=>{
+        const s = m.steps[+k.split(':')[1]];
+        if(!s) return;
+        out += `\n### ${s.h}\n${s.b}\n`;
+        if(s.code) out += '\n```\n'+s.code+'\n```\n';
+        if(pads[k] && pads[k].trim()) out += `\nMy note: ${pads[k].trim()}\n`;
+      });
+    });
+    return out;
+  }
+  function downloadGuide(){
+    const blob = new Blob([guideMarkdown()], {type:'text/markdown'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'workflow-arcade-guide.md';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    award('archivist');
+  }
+  function copyGuide(){
+    if(navigator.clipboard && navigator.clipboard.writeText)
+      navigator.clipboard.writeText(guideMarkdown()).then(()=>toast('GUIDE COPIED'));
+    award('archivist');
+  }
+  function openGuide(){
+    curWalk = null;
+    renderModules(null);
+    PIX.nudge();
+    const entries = guide.map(k=>{
+      const [mid, sidx] = k.split(':');
+      const m = MODULES.find(x=>x.id===mid);
+      const s = m && m.steps[+sidx];
+      return s ? {m, s, idx:+sidx, k} : null;
+    }).filter(Boolean);
+    stage.innerHTML = `<div class="lesson" id="guideview">
+      <h3 class="title">FIELD GUIDE</h3>
+      <div class="why"><b>YOUR KEEPSAKES</b><br>Steps you saved, with your own notes attached. Export it and the guide leaves the arcade with you.</div>`
+      + (entries.length ? entries.map(e=>`
+        <div class="gentry">
+          <div class="stepmeta">${esc(e.m.title)}</div>
+          <div class="st" style="font-size:12px;margin:4px 0 6px">${esc(e.s.h)}</div>
+          <div style="font-size:20px">${esc(e.s.b)}</div>
+          ${e.s.code?`<pre class="code">${esc(e.s.code)}</pre>`:''}
+          ${pads[e.k]&&pads[e.k].trim()?`<div class="see">My note: ${esc(pads[e.k].trim())}</div>`:''}
+          <div style="margin-top:8px"><button class="btn ghost" style="padding:7px;font-size:7px" onclick="App.toggleGuideStep('${e.m.id}',${e.idx})">REMOVE</button></div>
+        </div>`).join('')
+      : '<p style="color:var(--muted)">Nothing saved yet. Press + GUIDE on any step to keep it here.</p>')
+      + (entries.length?`<div class="walknav">
+          <button class="btn" onclick="App.downloadGuide()">DOWNLOAD .MD</button>
+          <button class="btn ghost" onclick="App.copyGuide()">COPY MARKDOWN</button>
+        </div>`:'')
+      + `</div>`;
+  }
+
+  /* ---- completion certificate: rendered to canvas, downloaded as PNG.
+     The learner name lives only in the input and on the canvas. It is
+     never written to localStorage. ---- */
+  function openCert(){
+    curWalk = null;
+    renderModules(null);
+    PIX.nudge();
+    stage.innerHTML = `<div class="lesson">
+      <h3 class="title">CERTIFICATE OF COMPLETION</h3>
+      <div class="why"><b>YOU CLEARED THE ARCADE</b><br>Add your name and download a pixel-art certificate. Your name stays in this page; it is never saved to this device.</div>
+      <div class="certfield">
+        <label for="certname">YOUR NAME</label>
+        <input id="certname" autocomplete="off" placeholder="ARCADE PLAYER" aria-label="Your name on the certificate" />
+      </div>
+      <canvas id="certcv" width="800" height="500" aria-label="Completion certificate preview"></canvas>
+      <div class="walknav">
+        <button class="btn mint" onclick="App.downloadCert()">DOWNLOAD PNG</button>
+        <button class="btn ghost" onclick="App.goHome()">&#9664; HOME</button>
+      </div>
+    </div>`;
+    const input = document.getElementById('certname');
+    const redraw = ()=>drawCert(input ? input.value : '');
+    if(input) input.addEventListener('input', redraw);
+    redraw();
+    // fonts may not be ready on first paint: repaint once they arrive
+    if(document.fonts && document.fonts.ready) document.fonts.ready.then(redraw);
+  }
+
+  function drawCert(name){
+    const cv = document.getElementById('certcv');
+    if(!cv) return;
+    const ctx = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    // background
+    ctx.fillStyle = '#1a1530'; ctx.fillRect(0,0,W,H);
+    // double pixel border: thick outer dark, thin inner amber
+    ctx.fillStyle = '#0d0a1c'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = '#1a1530'; ctx.fillRect(16,16,W-32,H-32);
+    ctx.fillStyle = '#ffc24b'; ctx.fillRect(28,28,W-56,4); ctx.fillRect(28,H-32,W-56,4);
+    ctx.fillRect(28,28,4,H-56); ctx.fillRect(W-32,28,4,H-56);
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffc24b';
+    ctx.font = '16px "Press Start 2P", monospace';
+    ctx.fillText('WORKFLOW ARCADE', W/2, 96);
+    ctx.fillStyle = '#efe9ff';
+    ctx.font = '14px "Press Start 2P", monospace';
+    ctx.fillText('CERTIFICATE OF COMPLETION', W/2, 150);
+    ctx.fillStyle = '#5fd6a6';
+    ctx.font = '30px "Press Start 2P", monospace';
+    const who = (name||'').trim().toUpperCase() || 'ARCADE PLAYER';
+    ctx.fillText(who.slice(0,22), W/2, 250);
+    ctx.fillStyle = '#9a8fc4';
+    ctx.font = '14px "Press Start 2P", monospace';
+    ctx.fillText('CLEARED ALL SEVEN QUESTS', W/2, 318);
+    ctx.fillStyle = '#efe9ff';
+    ctx.font = '12px "Press Start 2P", monospace';
+    ctx.fillText(xp + ' XP   ' + new Date().toLocaleDateString(), W/2, 366);
+    // small pixel face of PIXEL in the lower-left corner (8x8 block grid)
+    drawCertFace(ctx, 60, 392);
+  }
+
+  // simplified 8x8 PIXEL face built from fillRect blocks
+  function drawCertFace(ctx, ox, oy){
+    const u = 8;
+    const put = (x,y,c)=>{ ctx.fillStyle=c; ctx.fillRect(ox+x*u, oy+y*u, u, u); };
+    const body='#5a5390', screen='#0d0a1c', glow='#5fd6a6';
+    for(let y=0;y<8;y++) for(let x=0;x<8;x++) put(x,y,body);   // body block
+    for(let y=2;y<6;y++) for(let x=1;x<7;x++) put(x,y,screen); // inset screen
+    put(2,3,glow); put(5,3,glow);                              // eyes
+    put(2,5,glow); put(3,5,glow); put(4,5,glow); put(5,5,glow);// smile
+  }
+
+  function downloadCert(){
+    const cv = document.getElementById('certcv');
+    if(!cv) return;
+    cv.toBlob(blob=>{
+      if(!blob) return;
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'workflow-arcade-certificate.png';
+      a.click();
+      URL.revokeObjectURL(a.href);
+      toast('CERTIFICATE DOWNLOADED');
+      announce('certificate downloaded');
+    });
+  }
+
+  /* ---- 8-bit sound: synthesized, no assets, default off ---- */
+  let actx = null;
+  function beep(freq, dur, delay){
+    if(!soundOn) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return;
+    actx = actx || new AC();
+    const t = actx.currentTime + (delay||0);
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = 'square'; o.frequency.value = freq;
+    g.gain.setValueAtTime(.05, t);
+    g.gain.exponentialRampToValueAtTime(.001, t + dur);
+    o.connect(g).connect(actx.destination);
+    o.start(t); o.stop(t + dur);
+  }
+  function sfxPractice(){ beep(880, .09); }
+  function sfxClear(){ beep(523, .1); beep(659, .1, .1); beep(784, .18, .2); }
+  function toggleSound(){
+    soundOn = !soundOn;
+    saveProgress();
+    const b = document.getElementById('sndbtn');
+    if(b) b.textContent = 'SOUND: ' + (soundOn?'ON':'OFF');
+    if(soundOn) sfxPractice();
+  }
+
+  function toggleEg(btn){
+    const box = btn.nextElementSibling;
+    const open = box.hasAttribute('hidden');
+    if(open) box.removeAttribute('hidden'); else box.setAttribute('hidden','');
+    btn.textContent = open ? 'HIDE EXAMPLE' : 'SHOW EXAMPLE';
+    btn.setAttribute('aria-expanded', open);
+  }
+
+  function copyCode(btn){
+    const pre = btn.parentElement.querySelector('pre');
+    const ok = ()=>{ btn.textContent='COPIED'; announce('copied to clipboard'); setTimeout(()=>{ btn.textContent='COPY'; },1400); };
+    const fallback = ()=>{   // no clipboard API: select the block so cmd+C works
+      const r=document.createRange(); r.selectNodeContents(pre);
+      const sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      announce('text selected. Press command C to copy.');
+    };
+    if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(pre.textContent).then(ok).catch(fallback);
+    else fallback();
+  }
+
+  function resetProgress(){
+    if(!window.confirm('Reset all Workflow Arcade progress on this device?')) return;
+    xp=0; done={}; practiced={}; stepAt={}; pads={}; branchChoice={}; openWorlds={}; guide=[]; badges={}; oriented=false;
+    updateGuideCount();
+    try{ localStorage.removeItem('wa-progress'); }catch(e){ /* storage off: skip */ }
+    xpEl.textContent = 0;
+    barEl.style.width = '0%';
+    barWrapEl.setAttribute('aria-valuenow',0);
+    goHome();
+    toast('PROGRESS RESET');
+  }
+
+  function announce(msg){ statusEl.textContent=''; setTimeout(()=>{ statusEl.textContent=msg; },10); }
+  function setChatOpen(open){
+    tutorEl.classList.toggle('open', open);
+    const tg = document.getElementById('chatToggle');
+    if(tg) tg.setAttribute('aria-expanded', open);
+  }
+  function toggleChat(){ setChatOpen(!tutorEl.classList.contains('open')); }
+
+  function init(){
+    loadProgress();
+    xpEl.textContent = xp;
+    const pct = Math.round(Object.keys(done).length / MODULES.length * 100);
+    barEl.style.width = pct+'%';
+    barWrapEl.setAttribute('aria-valuenow',pct);
+    updateGuideCount();
+    renderModules(null);
+    goHome();
+    document.getElementById('sendbtn').onclick = ()=>say();
+    inputEl.addEventListener('keydown', e=>{ if(e.key==='Enter') say(); });
+    inputEl.addEventListener('focus', ()=>PIX.nudge());
+    const snd = document.getElementById('sndbtn');
+    if(snd) snd.textContent = 'SOUND: ' + (soundOn?'ON':'OFF');
+    // arrow keys page the walkthrough unless the learner is typing
+    document.addEventListener('keydown', e=>{
+      if(e.key!=='ArrowLeft' && e.key!=='ArrowRight') return;
+      const t = e.target;
+      if(t && (t.tagName==='INPUT' || t.tagName==='TEXTAREA')) return;
+      if(!curWalk) return;
+      e.preventDefault();
+      walk(curWalk.id, curWalk.v + (e.key==='ArrowRight'?1:-1));
+    });
+    setTimeout(()=>pixLine("Hi, I am PIXEL, your offline guide. Start quest one to create a Claude Code project, or ask me for a scripted hint."), 600);
+  }
+
+  return { init, goHome, openModule, complete, say, toggleChat, walk, hint, choosePath, changePath, copyCode, resetProgress, toggleEg, toggleWorld, checkPad, toggleGuideStep, openGuide, downloadGuide, copyGuide, downloadStepFile, toggleSound, openCert, downloadCert, dismissOrient };
+})();
+
+App.init();
+</script>
+</body>
+</html>
