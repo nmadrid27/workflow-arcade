@@ -63,6 +63,8 @@ const requiredHtml = [
   /BOSS CHECK/,
   /scoreRecall/,
   /WHY THIS WORKS/,
+  /data-world/,
+  /setWorldTheme/,
 ];
 
 for (const pattern of requiredHtml) {

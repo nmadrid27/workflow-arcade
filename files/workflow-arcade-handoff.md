@@ -39,6 +39,7 @@ The seven quests are complete and playable. The app includes:
 - An overworld quest map on the home screen with accessible node buttons over a decorative canvas path. The canvas paints three zone bands and a dotted trail between quests; seven keyboard-focusable, aria-labeled node buttons overlay it and open each quest, with cleared, current, and future states.
 - A first-run orientation card on the home screen explaining the arcade mechanics, dismissed once per device.
 - Optional synthesized ambient music (a generative Web Audio chord loop, not licensed tracks), default off, with a footer toggle and volume slider, both persisted.
+- Per-world page backdrops: the body tints to the active quest's world (amber, mint, or rose, matching the map zones) via a `data-world` attribute set by `setWorldTheme`, neutral on the home hub.
 - Social and search meta tags, an inline SVG favicon, a skip-to-content link, and a footer link to the GitHub issue tracker.
 
 PIXEL does not call a hosted model. Its status explicitly identifies it as an offline guide.

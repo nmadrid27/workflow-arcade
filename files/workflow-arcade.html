@@ -42,6 +42,26 @@
     font-size:21px;
     line-height:1.35;
     -webkit-font-smoothing:none;
+    transition:background .45s linear;
+  }
+  /* per-world backdrops, keyed to the quest-map zone accents */
+  body[data-world="1"]{
+    background:
+      radial-gradient(120% 80% at 80% -10%, rgba(255,194,75,.20), transparent 60%),
+      radial-gradient(100% 80% at -10% 110%, rgba(255,194,75,.09), transparent 55%),
+      #1b1430;
+  }
+  body[data-world="2"]{
+    background:
+      radial-gradient(120% 80% at 80% -10%, rgba(95,214,166,.18), transparent 60%),
+      radial-gradient(100% 80% at -10% 110%, rgba(95,214,166,.09), transparent 55%),
+      #131b29;
+  }
+  body[data-world="3"]{
+    background:
+      radial-gradient(120% 80% at 80% -10%, rgba(255,138,165,.18), transparent 60%),
+      radial-gradient(100% 80% at -10% 110%, rgba(138,120,255,.11), transparent 55%),
+      #1e1433;
   }
   .pixel{font-family:'Press Start 2P', ui-monospace, monospace; line-height:1.6;}
 
@@ -828,6 +848,12 @@ const App = (function(){
   const worldOf = id => WORLDS.findIndex(w=>w.ids.includes(id));
   let lastActive = null;
 
+  // backdrop follows the active quest's world; neutral on the home hub
+  function setWorldTheme(w){
+    if(typeof w==='number' && w>=0) document.body.setAttribute('data-world', String(w+1));
+    else document.body.removeAttribute('data-world');
+  }
+
   function renderModules(activeId){
     lastActive = activeId;
     const next = MODULES.find(m=>!done[m.id]);
@@ -860,6 +886,7 @@ const App = (function(){
 
   function goHome(){
     curWalk = null;
+    setWorldTheme(null);
     renderModules(null);
     PIX.setState('idle');
     // resume from saved progress: next uncleared quest, with step when mid-walkthrough
@@ -1006,6 +1033,7 @@ const App = (function(){
     const m = MODULES.find(x=>x.id===id);
     PIX.nudge();
     if(!m) return;
+    setWorldTheme(worldOf(id));
     openWorlds[worldOf(id)] = true;   // opening a quest reveals its world
     renderModules(id);
     if(!m.ready){ renderTeaser(m); return; }
@@ -1362,6 +1390,7 @@ const App = (function(){
     const m = MODULES.find(x=>x.id===id);
     if(!m || !m.ready) return;
     PIX.nudge();
+    setWorldTheme(worldOf(id));
     renderModules(id);
     renderWalk(m, v);
   }
@@ -1564,6 +1593,7 @@ const App = (function(){
   }
   function openGuide(){
     curWalk = null;
+    setWorldTheme(null);
     renderModules(null);
     PIX.nudge();
     const entries = guide.map(k=>{
@@ -1597,6 +1627,7 @@ const App = (function(){
      never written to localStorage. ---- */
   function openCert(){
     curWalk = null;
+    setWorldTheme(null);
     renderModules(null);
     PIX.nudge();
     stage.innerHTML = `<div class="lesson">
