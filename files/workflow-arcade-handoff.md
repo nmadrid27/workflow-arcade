@@ -40,6 +40,8 @@ The seven quests are complete and playable. The app includes:
 - A first-run orientation card on the home screen explaining the arcade mechanics, dismissed once per device.
 - Optional synthesized ambient music (a generative Web Audio chord loop, not licensed tracks), default off, with a footer toggle and volume slider, both persisted.
 - Per-world page backdrops: the body tints to the active quest's world (amber, mint, or rose, matching the map zones) via a `data-world` attribute set by `setWorldTheme`, neutral on the home hub.
+- A Steward Integrity framing (cherry-picked from a Terminal Steward concept): the HUD progress bar is labeled INTEGRITY, and the home hub shows a STEWARD INTEGRITY meter framed as progress from blind approval toward human accountability (driven by quests cleared).
+- An ESF Foundation panel in the left rail and an optional per-quest `principle` field rendered as a CORE ESF PRINCIPLE callout on the quest intro.
 - Social and search meta tags, an inline SVG favicon, a skip-to-content link, and a footer link to the GitHub issue tracker.
 
 PIXEL does not call a hosted model. Its status explicitly identifies it as an offline guide.

@@ -65,6 +65,9 @@ const requiredHtml = [
   /WHY THIS WORKS/,
   /data-world/,
   /setWorldTheme/,
+  /STEWARD INTEGRITY/,
+  /ESF FOUNDATION/,
+  /CORE ESF PRINCIPLE/,
 ];
 
 for (const pattern of requiredHtml) {

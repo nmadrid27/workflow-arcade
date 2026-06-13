@@ -210,6 +210,22 @@
   .lesson h3.title{font-family:'Press Start 2P';font-size:17px;line-height:1.5;color:var(--amber);margin:0 0 4px;}
   .lesson .why{background:var(--panel2);border-left:5px solid var(--mint);padding:12px 14px;margin:14px 0 20px;}
   .lesson .why b{color:var(--mint);font-family:'Press Start 2P';font-size:9px;}
+  /* CORE ESF PRINCIPLE callout, cherry-picked from the Terminal Steward concept */
+  .principle{background:var(--panel2);border:3px solid var(--outline);border-left:5px solid var(--rose);padding:10px 14px;margin:14px 0;font-size:19px;color:var(--ink);}
+  .principle .plabel{display:block;font-family:'Press Start 2P';font-size:8px;color:var(--rose);margin-bottom:6px;letter-spacing:1px;}
+  /* ESF Foundation panel in the left rail */
+  .esffound{margin-top:18px;border-top:3px solid var(--line);padding-top:14px;}
+  .esffound h2{margin:0 0 8px;}
+  .esffound p{font-size:17px;color:var(--muted);margin:0 0 8px;}
+  .esffound ul{margin:0 0 10px;padding-left:18px;font-size:16px;color:var(--ink);}
+  .esffound li{margin-bottom:3px;}
+  .esffound .esfquote{color:var(--amber);font-size:16px;border-left:3px solid var(--amber);padding-left:10px;}
+  /* Steward Integrity meter on the home hub */
+  .integ{max-width:440px;margin:18px auto 0;}
+  .integ .integlabel{font-family:'Press Start 2P';font-size:9px;color:var(--mint);}
+  .integbar{height:14px;background:var(--bg2);border:3px solid var(--outline);margin:6px 0 4px;}
+  .integbar > i{display:block;height:100%;background:var(--mint);transition:width .4s steps(8);}
+  .integends{display:flex;justify-content:space-between;font-family:'VT323';font-size:14px;color:var(--muted);}
   ol.steps{list-style:none;counter-reset:s;padding:0;margin:0;}
   ol.steps > li{counter-increment:s;display:grid;grid-template-columns:38px 1fr;gap:12px;margin:0 0 18px;}
   ol.steps > li::before{
@@ -363,7 +379,7 @@
   <div class="hud">
     <button class="gbtn pixel" onclick="App.openGuide()" aria-label="Open field guide">GUIDE <span id="gcount">0</span></button>
     <div class="xp">XP <span id="xpval">0</span></div>
-    <div class="xp">QUESTS <div class="bar" role="progressbar" aria-label="Quests cleared" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="progbar"></i></div></div>
+    <div class="xp">INTEGRITY <div class="bar" role="progressbar" aria-label="Steward integrity: progress from blind approval toward human accountability" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="progbar"></i></div></div>
   </div>
 </header>
 
@@ -561,7 +577,7 @@ const PIX = (function(){
 const WHERE_LABELS = {terminal:'TERMINAL', claude:'CLAUDE CODE', cowork:'COWORK', desktop:'CLAUDE DESKTOP', browser:'BROWSER'};
 const MODULES = [
   {
-    id:'claude-start', ready:true, xp:120, min:15, learn:{label:'Claude Code documentation', url:'https://code.claude.com/docs'},
+    id:'claude-start', ready:true, xp:120, min:15, learn:{label:'Claude Code documentation', url:'https://code.claude.com/docs'}, principle:'Verify your environment yourself before you trust any tool to run in it.',
     title:'Start Your First Claude Code Project',
     sub:'Create a project folder, open Claude Code, and generate CLAUDE.md.',
     why:'Claude Code works best inside a clear project folder. The folder gives the work a boundary, and CLAUDE.md gives Claude durable instructions for that project.',
@@ -582,7 +598,7 @@ const MODULES = [
     checkpoint:'Clear this quest once CLAUDE.md exists inside the correct project folder.'
   },
   {
-    id:'work-profile', ready:true, xp:140, min:20, learn:{label:'Claude Code documentation', url:'https://code.claude.com/docs'},
+    id:'work-profile', ready:true, xp:140, min:20, learn:{label:'Claude Code documentation', url:'https://code.claude.com/docs'}, principle:'Make your working rules explicit, so judgment is shared and not assumed.',
     title:'Teach Claude How to Work With You',
     sub:'Turn CLAUDE.md into a concise, testable collaboration profile.',
     why:'Claude can only follow working preferences that you make explicit. Useful instructions define evidence rules, decision boundaries, and what good collaboration looks like.',
@@ -604,7 +620,7 @@ const MODULES = [
     checkpoint:'Clear this quest once CLAUDE.md contains a tested How to Work With Me section.'
   },
   {
-    id:'esf-companion', ready:true, xp:160, min:15, learn:{label:'ESF Companion repository', url:'https://github.com/nmadrid27/esf-companion'},
+    id:'esf-companion', ready:true, xp:160, min:15, learn:{label:'ESF Companion repository', url:'https://github.com/nmadrid27/esf-companion'}, principle:'Your position comes first, so your own thinking leads the work.',
     title:'Add ESF Companion',
     sub:'Choose the Cowork plugin or manual templates, then anchor the work.',
     why:'A collaboration profile shapes how Claude works. ESF Companion shapes when AI should enter and how you record your judgment.',
@@ -629,7 +645,7 @@ const MODULES = [
     checkpoint:'Clear this quest once you can locate your position, decision record, and disclosure process.'
   },
   {
-    id:'first-project', ready:true, xp:200, min:30, learn:{label:'ESF Companion repository', url:'https://github.com/nmadrid27/esf-companion'},
+    id:'first-project', ready:true, xp:200, min:30, learn:{label:'ESF Companion repository', url:'https://github.com/nmadrid27/esf-companion'}, principle:'Direct the work, verify the result, and disclose the help honestly.',
     title:'Complete Your First Small Project',
     sub:'Choose a real project, direct the work, verify it, and disclose AI use.',
     why:'Setup only matters when it supports real work. A small first project lets you practice directing Claude while retaining judgment.',
@@ -652,7 +668,7 @@ const MODULES = [
     checkpoint:'Clear this quest once the artifact, decision record, verification note, and disclosure draft exist.'
   },
   {
-    id:'steer-session', ready:true, xp:160, min:10, learn:{label:'Claude Code documentation', url:'https://code.claude.com/docs'},
+    id:'steer-session', ready:true, xp:160, min:10, learn:{label:'Claude Code documentation', url:'https://code.claude.com/docs'}, principle:'Read every prompt, and approve nothing you have not understood.',
     title:'Steer the Session',
     sub:'Read permission prompts, interrupt, plan first, and keep instructions durable.',
     why:'Claude Code pauses for your judgment at permission prompts, and you can interrupt or redirect at any time. Steering in the moment is how the work stays yours.',
@@ -672,7 +688,7 @@ const MODULES = [
     checkpoint:'Clear this quest once you have read a real permission prompt in full, interrupted once, and approved one plan before changes.'
   },
   {
-    id:'version-control', ready:true, xp:180, min:15, learn:{label:'Pro Git book', url:'https://git-scm.com/book'},
+    id:'version-control', ready:true, xp:180, min:15, learn:{label:'Pro Git book', url:'https://git-scm.com/book'}, principle:'Read the diff before it becomes history.',
     title:'Put the Project Under Version Control',
     sub:'Create a git history, let Claude commit, and read every diff first.',
     why:'Git records checkpoints you can return to. With AI editing your files, the diff is where your judgment lives: you read every change before it becomes history.',
@@ -692,7 +708,7 @@ const MODULES = [
     checkpoint:'Clear this quest once your project has a first commit whose diff you read before approving.'
   },
   {
-    id:'recover', ready:true, xp:180, min:15, learn:{label:'Pro Git book', url:'https://git-scm.com/book'},
+    id:'recover', ready:true, xp:180, min:15, learn:{label:'Pro Git book', url:'https://git-scm.com/book'}, principle:'A mistake is not a failure once it becomes a durable rule.',
     title:'Recover When It Goes Wrong',
     sub:'Stop, see what changed, revert what you do not want, and keep the lesson.',
     why:'Wrong-file edits and broken results are a normal part of early AI collaboration. Recovery is a skill: stop the work, inspect the change, restore the good version, and turn the failure into a durable instruction.',
@@ -866,7 +882,22 @@ const App = (function(){
           <span>${esc(w.title)}</span><span class="wstat">${cleared}/${quests.length} ${open?'&#9662;':'&#9656;'}</span>
         </button>
         ${open?`<div class="wbody">${quests.map(m=>questBtn(m, activeId)).join('')}</div>`:''}`;
-    }).join('');
+    }).join('') + esfFoundationHtml();
+  }
+
+  // ESF Foundation panel, cherry-picked from the Terminal Steward concept
+  function esfFoundationHtml(){
+    return `<div class="esffound">
+      <h2 class="pixel">ESF FOUNDATION</h2>
+      <p>The Epistemic Stewardship Framework keeps human judgment in control of AI-assisted work. You keep authority over:</p>
+      <ul>
+        <li>verifying files yourself,</li>
+        <li>reading every change line by line,</li>
+        <li>running the checks, and</li>
+        <li>disclosing AI use honestly.</li>
+      </ul>
+      <div class="esfquote">Never trust a claim that the work is done. Run the checks yourself.</div>
+    </div>`;
   }
 
   function toggleWorld(wi){
@@ -914,6 +945,11 @@ const App = (function(){
           ${allCleared?`<button class="btn mint" onclick="App.openCert()">GET CERTIFICATE</button>`:''}
         </div>
         ${(oriented && !started && !allCleared)?`<div class="stepmeta" style="margin-top:16px;color:var(--mint)">ORIENTATION DONE &#10003; &#183; QUEST ONE IS READY WHEN YOU ARE</div>`:''}
+        <div class="integ">
+          <span class="integlabel">STEWARD INTEGRITY ${Math.round(Object.keys(done).length / MODULES.length * 100)}%</span>
+          <div class="integbar"><i style="width:${Math.round(Object.keys(done).length / MODULES.length * 100)}%"></i></div>
+          <div class="integends"><span>blind approval</span><span>human accountability</span></div>
+        </div>
         ${oriented?'':`<div class="why" style="max-width:560px;text-align:left;margin-top:18px"><b>HOW THIS ARCADE WORKS</b><br>Pick a quest from the map or the log. Each quest walks one step at a time, and every step has a practice pad or a safe simulated terminal. Practicing marks a step done, HINT asks PIXEL for help, CHECK ANSWER reviews the shape of your pad, and + GUIDE keeps any step in your exportable field guide.<div style="margin-top:12px"><button class="btn mint" onclick="App.dismissOrient()">GOT IT</button></div></div>`}
         ${questMapHtml()}
         ${badgeCaseHtml()}
@@ -1111,6 +1147,7 @@ const App = (function(){
       <div class="lesson">
         <h3 class="title">${esc(m.title)}</h3>
         <div class="why"><b>WHY THIS MATTERS</b><br>${esc(m.why)}</div>
+        ${m.principle?`<div class="principle"><span class="plabel">CORE ESF PRINCIPLE</span>${esc(m.principle)}</div>`:''}
         ${dotsHtml(m,0)}
         ${m.branch?`<div class="stepmeta">PATH: ${esc(m.branch[branchChoice[m.id]])} <button class="btn ghost" style="padding:7px;font-size:7px" onclick="App.changePath('${m.id}')">CHANGE PATH</button></div>`:''}
         <p style="color:var(--muted)">${visibleSteps(m).length} steps, one at a time. Each step has a practice sandbox. Practicing marks the step done, and the XP just tracks what you have practiced.</p>
