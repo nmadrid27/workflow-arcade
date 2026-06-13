@@ -68,7 +68,7 @@ const requiredHtml = [
   /STEWARD INTEGRITY/,
   /ESF FOUNDATION/,
   /CORE ESF PRINCIPLE/,
-  /Space Grotesk/,
+  /VT323/,
   /--violet/,
 ];
 
