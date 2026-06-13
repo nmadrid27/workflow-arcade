@@ -68,6 +68,8 @@ const requiredHtml = [
   /STEWARD INTEGRITY/,
   /ESF FOUNDATION/,
   /CORE ESF PRINCIPLE/,
+  /Space Grotesk/,
+  /--violet/,
 ];
 
 for (const pattern of requiredHtml) {
