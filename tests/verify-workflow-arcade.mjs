@@ -59,6 +59,7 @@ const requiredHtml = [
   /MUSIC: /,
   /toggleMusic/,
   /Music volume/,
+  /press Enter/,
 ];
 
 for (const pattern of requiredHtml) {

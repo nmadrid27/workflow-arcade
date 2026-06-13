@@ -1131,10 +1131,10 @@ const App = (function(){
   function sandboxHtml(m, idx, s){
     if(s.sim) return `
       <div class="sandbox">
-        <div class="sbtitle">PRACTICE TERMINAL <span class="sbhint">simulated and safe. Type the command, or "help"</span></div>
+        <div class="sbtitle">PRACTICE TERMINAL <span class="sbhint">simulated and safe. Type or paste a command, then press Enter to run it. Type help for options.</span></div>
         ${s.scene?`<pre class="ftree simviz" id="simviz">${renderScene(s.scene)}</pre>`:''}
         <div class="termout" id="termout"></div>
-        <div class="termrow"><span class="prompt">${s.where==='claude'?'&gt;':'$'}</span><input id="termin" autocomplete="off" spellcheck="false" aria-label="practice terminal input"></div>
+        <div class="termrow"><span class="prompt">${s.where==='claude'?'&gt;':'$'}</span><input id="termin" autocomplete="off" spellcheck="false" aria-label="practice terminal input, press Enter to run" placeholder="type a command, then press Enter"></div>
       </div>`;
     if(s.pad) return `
       <div class="sandbox">
