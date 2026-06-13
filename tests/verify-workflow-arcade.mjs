@@ -60,6 +60,9 @@ const requiredHtml = [
   /toggleMusic/,
   /Music volume/,
   /press Enter/,
+  /BOSS CHECK/,
+  /scoreRecall/,
+  /WHY THIS WORKS/,
 ];
 
 for (const pattern of requiredHtml) {

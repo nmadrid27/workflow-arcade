@@ -133,7 +133,7 @@
   .brand:focus-visible,.quest:focus-visible,.world:focus-visible,.btn:focus-visible,.send:focus-visible,.chat-toggle:focus-visible,
   .codewrap .copy:focus-visible,.resetbtn:focus-visible,.egbtn:focus-visible,.gbtn:focus-visible,.musvol:focus-visible,
   .composer input:focus-visible,.termrow input:focus-visible,.sandbox textarea:focus-visible,
-  .certfield input:focus-visible,.mapnode:focus-visible{
+  .certfield input:focus-visible,.mapnode:focus-visible,.rin:focus-visible{
     outline:3px solid var(--mint);outline-offset:3px;
   }
   .branch-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0;}
@@ -214,6 +214,15 @@
   .egbtn:hover{background:var(--line);}
   .eg{margin-top:8px;color:var(--muted);font-size:18px;line-height:1.3;white-space:pre-wrap;border-left:3px solid var(--mint);padding-left:10px;}
   .egbtn.check{color:var(--amber);margin-right:8px;}
+  .bosswrap{margin-top:18px;border-top:3px solid var(--line);padding-top:16px;}
+  .bosshead{font-size:12px;color:var(--rose);margin-bottom:6px;}
+  .rcard{margin-top:12px;}
+  .rin{width:100%;background:var(--bg2);border:2px solid var(--outline);color:var(--ink);font-family:'VT323';font-size:19px;padding:7px 10px;outline:none;}
+  .rconf{margin-right:4px;}
+  .rconf.sel{background:var(--amber);color:var(--outline);}
+  .rfb{margin-top:8px;font-size:18px;}
+  .rfb.ok{color:var(--mint);}
+  .rfb.miss{color:var(--rose);}
   .padfb{margin-top:8px;font-size:18px;line-height:1.3;}
   .padfb.ok{color:var(--mint);}
   .padfb.miss{color:var(--rose);}
@@ -538,11 +547,16 @@ const MODULES = [
     why:'Claude Code works best inside a clear project folder. The folder gives the work a boundary, and CLAUDE.md gives Claude durable instructions for that project.',
     steps:[
       { h:'Create a project folder', where:'terminal', hint:'mkdir makes a folder, and -p creates any missing parent folders along the way. The ~ means your home folder, so the command works no matter where Terminal starts.', b:'Press Command+Space, type Terminal, and press Return. Terminal is the macOS app where you type commands. Then create one focused folder for your first project.', code:'mkdir -p ~/projects/my-first-claude-project', see:'The new project folder exists.', scene:['~/', '└── projects/', '    (empty)'], sim:[{req:['mkdir','my-first-claude-project'],key:true,out:'folder created: ~/projects/my-first-claude-project',scene:['~/', '└── projects/', '*    └── my-first-claude-project/  ← created']}] },
-      { h:'Point Terminal at the folder', where:'terminal', hint:'cd changes your current folder, and pwd prints where you are. Claude Code treats the current folder as the project, so this step decides what Claude can see.', b:'Change into the folder before starting Claude Code. The current folder becomes Claude’s working context.', code:'cd ~/projects/my-first-claude-project\npwd', see:'The printed path ends with my-first-claude-project.', scene:['~/  ← you are here', '└── projects/', '    └── my-first-claude-project/'], sim:[{req:['cd','my-first-claude-project'],key:true,out:'current folder: ~/projects/my-first-claude-project',scene:['~/', '└── projects/', '*    └── my-first-claude-project/  ← you are here']},{req:['pwd'],out:'/Users/you/projects/my-first-claude-project',scene:['~/', '└── projects/', '*    └── my-first-claude-project/  ← you are here']}] },
+      { h:'Point Terminal at the folder', where:'terminal', hint:'cd changes your current folder, and pwd prints where you are. Claude Code treats the current folder as the project, so this step decides what Claude can see.', b:'Change into the folder before starting Claude Code. The current folder becomes Claude’s working context.', code:'cd ~/projects/my-first-claude-project\npwd', see:'The printed path ends with my-first-claude-project.', scene:['~/  ← you are here', '└── projects/', '    └── my-first-claude-project/'], explain:'Why does the folder you point Terminal at matter to Claude?', sim:[{req:['cd','my-first-claude-project'],key:true,out:'current folder: ~/projects/my-first-claude-project',scene:['~/', '└── projects/', '*    └── my-first-claude-project/  ← you are here']},{req:['pwd'],out:'/Users/you/projects/my-first-claude-project',scene:['~/', '└── projects/', '*    └── my-first-claude-project/  ← you are here']}] },
       { h:'Install Claude Code', where:'terminal', hint:'The command downloads Anthropic’s installer and runs it. Read the official Claude Code setup page first so you know what the installer does, then confirm the install with claude --version.', b:'Use Anthropic’s macOS installer. Review official setup guidance before running remote install commands on your machine.', code:'curl -fsSL https://claude.ai/install.sh | bash\nclaude --version', see:'Claude Code installs and prints a version number.', sim:[{req:['curl','claude.ai/install.sh'],key:true,name:'curl -fsSL https://claude.ai/install.sh | bash',out:'Installing Claude Code...\nClaude Code installed successfully.'},{req:['claude --version'],out:'Claude Code 1.x.x'}] },
       { h:'Open Claude Code in the project', where:'terminal', hint:'Run claude with no extra words. The first run opens a browser window to sign in; that is expected. After signing in, return to Terminal.', b:'Run claude while Terminal points at the project folder. Complete authentication if asked.', code:'claude', see:'Claude Code opens in the correct working directory.', scene:['my-first-claude-project/', '└── (no session)'], sim:[{req:['claude'],key:true,out:'Claude Code opened in ~/projects/my-first-claude-project\nAuthentication complete.',scene:['my-first-claude-project/', '*└── Claude Code session open in this folder']}] },
-      { h:'Generate CLAUDE.md with /init', where:'claude', hint:'Type /init at the Claude Code prompt, not in the macOS shell. Claude scans the project and writes CLAUDE.md with starter guidance you can edit.', b:'Inside Claude Code, run /init. Slash commands run in Claude Code, not in the macOS shell.', code:'/init', see:'A CLAUDE.md file appears in the project folder.', pad:'Write the slash command you will run and the file it creates.' },
+      { h:'Generate CLAUDE.md with /init', where:'claude', hint:'Type /init at the Claude Code prompt, not in the macOS shell. Claude scans the project and writes CLAUDE.md with starter guidance you can edit.', b:'Inside Claude Code, run /init. Slash commands run in Claude Code, not in the macOS shell.', code:'/init', see:'A CLAUDE.md file appears in the project folder.', explain:'Why does /init run inside Claude Code instead of the Terminal shell?', pad:'Write the slash command you will run and the file it creates.' },
       { h:'Verify the project context', where:'claude', hint:'Ask the question exactly as written. A correct answer names your folder and mentions CLAUDE.md. If it names a different folder, quit and restart Claude Code from the right one.', b:'Ask Claude to name the folder and summarize the instructions it loaded. This catches folder mistakes before real work begins.', code:'What project folder are you working in, and what instructions did you load?', see:'Claude names the folder and references CLAUDE.md.', pad:'Write the verification question and what a correct answer must mention.' }
+    ],
+    recall:[
+      { q:'What command creates your project folder?', a:'mkdir -p ~/projects/my-first-claude-project' },
+      { q:'After you cd into the folder, what command opens Claude Code there?', a:'claude' },
+      { q:'Inside Claude Code, what do you run to generate CLAUDE.md?', a:'/init' }
     ],
     tryit:'Create the real folder, open Claude Code inside it, run /init, then inspect the generated CLAUDE.md.',
     checkpoint:'Clear this quest once CLAUDE.md exists inside the correct project folder.'
@@ -728,6 +742,7 @@ const App = (function(){
   let musicOn = false;      // synthesized ambient music, default off
   let musicVol = 45;        // music volume, 0 to 100
   let oriented = false;     // first-run orientation card dismissed
+  let recallState = {};     // boss-check recall results, keyed moduleId:itemIndex
   let history = [];         // chat history for scripted guidance
   let busy = false;
 
@@ -752,10 +767,11 @@ const App = (function(){
       if(typeof p.oriented === 'boolean') oriented = p.oriented;
       if(typeof p.musicOn === 'boolean') musicOn = p.musicOn;
       if(typeof p.musicVol === 'number') musicVol = Math.max(0, Math.min(100, p.musicVol));
+      if(p.recallState && typeof p.recallState === 'object') recallState = p.recallState;
     }catch(e){ /* storage off: run in-memory */ }
   }
   function saveProgress(){
-    try{ localStorage.setItem('wa-progress', JSON.stringify({xp, done, practiced, stepAt, pads, branchChoice, openWorlds, guide, badges, soundOn, oriented, musicOn, musicVol})); }
+    try{ localStorage.setItem('wa-progress', JSON.stringify({xp, done, practiced, stepAt, pads, branchChoice, openWorlds, guide, badges, soundOn, oriented, musicOn, musicVol, recallState})); }
     catch(e){ /* storage off: skip */ }
   }
 
@@ -1063,6 +1079,7 @@ const App = (function(){
         ${s.see?`<div class="see">&#9656; You should see: ${esc(s.see)}</div>`:''}
         ${sandboxHtml(m, originalIndex, s)}
         ${s.file?fileBoxHtml(m, originalIndex, s):''}
+        ${s.explain?explainHtml(m, originalIndex, s):''}
         <div class="walknav">
           <button class="btn ghost" onclick="App.walk('${m.id}',${v-1})">&#9664; BACK</button>
           <button class="btn ghost" onclick="App.hint('${m.id}',${originalIndex})">HINT</button>
@@ -1108,6 +1125,15 @@ const App = (function(){
         ${f.head?`<button class="egbtn check" onclick="App.downloadStepFile('${m.id}',${idx})">DOWNLOAD ${esc(dlName).toUpperCase()}</button>`:''}
         ${note?`<div style="font-size:18px;color:var(--muted);margin-top:${f.head?'8px':'0'}">${esc(note)}</div>`:''}
       </div>
+    </div>`;
+  }
+
+  // Self-explanation prompt: a one-line reflection saved beside the pad
+  // under a :why-suffixed key, so no new persistence field is needed.
+  function explainHtml(m, idx, s){
+    return `<div class="sandbox">
+      <div class="sbtitle">WHY THIS WORKS <span class="sbhint">one line, in your own words. optional, saved to your guide</span></div>
+      <textarea id="whyin" placeholder="${esc(s.explain)}" aria-label="why this works">${esc(pads[m.id+':'+idx+':why']||'')}</textarea>
     </div>`;
   }
 
@@ -1197,6 +1223,10 @@ const App = (function(){
         updateHint();
       });
     }
+    if(s.explain){
+      const wy = document.getElementById('whyin');
+      if(wy){ const wk = m.id+':'+idx+':why'; wy.addEventListener('input', ()=>{ pads[wk]=wy.value; saveProgress(); }); }
+    }
   }
 
   function markPracticed(m, idx){
@@ -1223,6 +1253,7 @@ const App = (function(){
         <h3 class="title">${esc(m.title)}</h3>
         ${dotsHtml(m, items.length+1)}
         <div class="stepmeta" style="margin-top:10px">${prCount} / ${items.length} STEPS PRACTICED &#183; ${items.filter(({originalIndex})=>(pads[m.id+':'+originalIndex]||'').trim()).length} NOTES WRITTEN</div>
+        ${m.recall?recallHtml(m):''}
         <div class="tryit"><b>TRY IT</b><br>${esc(m.tryit)}</div>
         <div class="checkpoint">
           <button class="btn ${cleared?'ghost':'mint'}" onclick="App.complete('${m.id}')">
@@ -1236,6 +1267,65 @@ const App = (function(){
           ${Object.keys(done).length===MODULES.length?`<button class="btn mint" onclick="App.openCert()">GET CERTIFICATE</button>`:''}
         </div>
       </div>`;
+  }
+
+  /* ---- boss check: end-of-quest recall. The learner reproduces each
+     answer from memory, rates confidence, reveals to self-score, and can
+     retry. recallCard returns one card so a single card re-renders in
+     place after scoring, never the whole finish card, so other inputs
+     are not lost. XP is awarded once per item via a sticky awarded flag,
+     so retry cannot farm it. ---- */
+  function recallCard(m, i){
+    const it = m.recall[i];
+    const st = recallState[m.id+':'+i] || {};
+    const scored = st.scored;
+    const conf = st.conf;
+    const cbtn = (val,label)=>`<button class="egbtn rconf ${conf===val?'sel':''}" onclick="App.setRecallConf('${m.id}',${i},'${val}',this)">${label}</button>`;
+    return `<div class="sandbox rcard" id="rcard-${i}">
+        <div class="sbtitle">RECALL ${i+1} <span class="sbhint">from memory, no peeking</span></div>
+        <div style="padding:10px 12px">
+          <div style="font-size:20px;margin-bottom:8px">${esc(it.q)}</div>
+          <input class="rin" id="rin-${i}" autocomplete="off" spellcheck="false" aria-label="your answer from memory" placeholder="type it from memory" ${scored?'disabled':''}>
+          <div class="rconfrow" style="margin-top:8px"${scored?' hidden':''}>
+            <span class="sbhint">how sure?</span> ${cbtn('guess','GUESS')} ${cbtn('fairly','FAIRLY')} ${cbtn('sure','SURE')}
+            <button class="egbtn check" onclick="App.revealRecall('${m.id}',${i})">REVEAL</button>
+          </div>
+          <div class="ranswer" id="rans-${i}"${scored?'':' hidden'}>
+            <div class="see">Answer: ${esc(it.a)}</div>
+            ${scored?`<div class="rfb ${scored==='got'?'ok':'miss'}">${scored==='got'?'You recalled it.':'Missed, now you have seen it again.'}${(st.conf==='sure'&&scored==='missed')?' You felt sure but missed it; that gap is worth a second look.':''} <button class="egbtn" onclick="App.retryRecall('${m.id}',${i})">RETRY</button></div>`
+              :`<div style="margin-top:6px"><button class="egbtn" onclick="App.scoreRecall('${m.id}',${i},'got',this)">I GOT IT</button> <button class="egbtn" onclick="App.scoreRecall('${m.id}',${i},'missed',this)">I MISSED IT</button></div>`}
+          </div>
+        </div>
+      </div>`;
+  }
+  function recallHtml(m){
+    const items = m.recall.map((it,i)=>recallCard(m, i)).join('');
+    return `<div class="bosswrap"><div class="bosshead pixel">BOSS CHECK</div><p style="color:var(--muted);font-size:18px;margin:0 0 12px">Reproduce the moves you just practiced, from memory. Reveal to self-score. Retry anytime. This is the part that makes it stick.</p>${items}</div>`;
+  }
+  function setRecallConf(mid, i, val, btn){
+    const st = recallState[mid+':'+i] || {}; st.conf = val; recallState[mid+':'+i] = st; saveProgress();
+    const row = btn.parentElement; row.querySelectorAll('.rconf').forEach(b=>b.classList.remove('sel')); btn.classList.add('sel');
+  }
+  function revealRecall(mid, i){
+    const a = document.getElementById('rans-'+i); if(a) a.removeAttribute('hidden');
+  }
+  function scoreRecall(mid, i, got, btn){
+    const key = mid+':'+i; const st = recallState[key] || {};
+    st.scored = got;
+    const firstScore = !st.awarded;
+    if(firstScore){ st.awarded = true; }
+    recallState[key] = st;
+    if(firstScore){ xp += 5; xpEl.textContent = xp; sfxPractice(); }
+    saveProgress();
+    // re-render just this card in place
+    const card = document.getElementById('rcard-'+i);
+    if(card){ const m = MODULES.find(x=>x.id===mid); const tmp = document.createElement('div'); tmp.innerHTML = recallCard(m, i); card.replaceWith(tmp.firstElementChild); }
+    if(firstScore) toast('RECALL PRACTICED ✓   +5 XP');
+  }
+  function retryRecall(mid, i){
+    const key = mid+':'+i; const st = recallState[key] || {}; st.scored = null; st.conf = null; recallState[key] = st; saveProgress();
+    const card = document.getElementById('rcard-'+i);
+    if(card){ const m = MODULES.find(x=>x.id===mid); const tmp = document.createElement('div'); tmp.innerHTML = recallCard(m, i); card.replaceWith(tmp.firstElementChild); }
   }
 
   function walk(id, v){
@@ -1665,7 +1755,7 @@ const App = (function(){
 
   function resetProgress(){
     if(!window.confirm('Reset all Workflow Arcade progress on this device?')) return;
-    xp=0; done={}; practiced={}; stepAt={}; pads={}; branchChoice={}; openWorlds={}; guide=[]; badges={}; oriented=false;
+    xp=0; done={}; practiced={}; stepAt={}; pads={}; branchChoice={}; openWorlds={}; guide=[]; badges={}; oriented=false; recallState={};
     updateGuideCount();
     try{ localStorage.removeItem('wa-progress'); }catch(e){ /* storage off: skip */ }
     xpEl.textContent = 0;
@@ -1720,7 +1810,7 @@ const App = (function(){
     setTimeout(()=>pixLine("Hi, I am PIXEL, your offline guide. Start quest one to create a Claude Code project, or ask me for a scripted hint."), 600);
   }
 
-  return { init, goHome, openModule, complete, say, toggleChat, walk, hint, choosePath, changePath, copyCode, resetProgress, toggleEg, toggleWorld, checkPad, toggleGuideStep, openGuide, downloadGuide, copyGuide, downloadStepFile, toggleSound, openCert, downloadCert, dismissOrient, toggleMusic, setMusicVol };
+  return { init, goHome, openModule, complete, say, toggleChat, walk, hint, choosePath, changePath, copyCode, resetProgress, toggleEg, toggleWorld, checkPad, toggleGuideStep, openGuide, downloadGuide, copyGuide, downloadStepFile, toggleSound, openCert, downloadCert, dismissOrient, toggleMusic, setMusicVol, setRecallConf, revealRecall, scoreRecall, retryRecall };
 })();
 
 App.init();
