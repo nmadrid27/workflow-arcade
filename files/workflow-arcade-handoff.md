@@ -178,4 +178,4 @@ Do not invent unstable interface labels. Teach the verified action and outcome w
 
 ## Disclosure
 
-This project was completed through AI-assisted collaboration. Nathan Madrid set the audience, curriculum direction, macOS scope, learner-chosen final project, dual ESF installation paths, Cowork plugin preference, and final design approvals. Codex reviewed the original files, tested the existing interface, verified source documentation, structured the specification and implementation plan, implemented the approved changes, and ran static and browser verification. Nathan remained responsible for the project direction and approval decisions.
+This project was built through AI-assisted collaboration. Nathan Madrid set the audience, curriculum direction, macOS scope, learner-chosen final project, dual ESF installation paths, Cowork plugin preference, and every design approval. Codex built and verified the original arcade; Claude Code led the later development, including the additional quests, the learning and gamification features, and the public launch, and verified each change. Nathan remained responsible for the project direction and all approval decisions.
