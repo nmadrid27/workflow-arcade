@@ -840,7 +840,8 @@ const App = (function(){
           <button class="btn ghost" onclick="App.say('what should I learn first?')">ASK PIXEL</button>
           ${allCleared?`<button class="btn mint" onclick="App.openCert()">GET CERTIFICATE</button>`:''}
         </div>
-        ${oriented?'':`<div class="why" style="max-width:560px;text-align:left;margin-top:18px"><b>HOW THIS ARCADE WORKS</b><br>Pick a quest from the map or the log. Each quest walks one step at a time, and every step has a practice pad or a safe simulated terminal. Practicing banks XP, HINT asks PIXEL for help, CHECK ANSWER reviews your pad, and + GUIDE keeps any step in your exportable field guide.<div style="margin-top:12px"><button class="btn mint" onclick="App.dismissOrient()">GOT IT</button></div></div>`}
+        ${(oriented && !started && !allCleared)?`<div class="stepmeta" style="margin-top:16px;color:var(--mint)">ORIENTATION DONE &#10003; &#183; QUEST ONE IS READY WHEN YOU ARE</div>`:''}
+        ${oriented?'':`<div class="why" style="max-width:560px;text-align:left;margin-top:18px"><b>HOW THIS ARCADE WORKS</b><br>Pick a quest from the map or the log. Each quest walks one step at a time, and every step has a practice pad or a safe simulated terminal. Practicing marks a step done, HINT asks PIXEL for help, CHECK ANSWER reviews the shape of your pad, and + GUIDE keeps any step in your exportable field guide.<div style="margin-top:12px"><button class="btn mint" onclick="App.dismissOrient()">GOT IT</button></div></div>`}
         ${questMapHtml()}
         ${badgeCaseHtml()}
       </div>`;
@@ -1038,7 +1039,7 @@ const App = (function(){
         <div class="why"><b>WHY THIS MATTERS</b><br>${esc(m.why)}</div>
         ${dotsHtml(m,0)}
         ${m.branch?`<div class="stepmeta">PATH: ${esc(m.branch[branchChoice[m.id]])} <button class="btn ghost" style="padding:7px;font-size:7px" onclick="App.changePath('${m.id}')">CHANGE PATH</button></div>`:''}
-        <p style="color:var(--muted)">${visibleSteps(m).length} steps, one at a time. Each step has a practice sandbox. Practicing banks bonus XP.</p>
+        <p style="color:var(--muted)">${visibleSteps(m).length} steps, one at a time. Each step has a practice sandbox. Practicing marks the step done, and the XP just tracks what you have practiced.</p>
         <div style="display:flex;gap:12px;flex-wrap:wrap">
           <button class="btn" onclick="App.walk('${m.id}',1)">START STEPS</button>
           <button class="btn ghost" onclick="App.walk('${m.id}',${visibleSteps(m).length+1})">SKIP TO CHECKPOINT</button>
@@ -1205,7 +1206,7 @@ const App = (function(){
     xp += 5;
     xpEl.textContent = xp;
     saveProgress();
-    toast('+5 XP  STEP PRACTICED');
+    toast('STEP PRACTICED ✓   +5 XP');
     sfxPractice();
     PIX.celebrate();
     const tag = document.getElementById('prtag');
@@ -1287,7 +1288,7 @@ const App = (function(){
     const pct = Math.round(Object.keys(done).length / MODULES.length * 100);
     barEl.style.width = pct+'%';
     barWrapEl.setAttribute('aria-valuenow',pct);
-    toast(`+${m.xp} XP  QUEST CLEARED`);
+    toast(`QUEST CLEARED ✓   +${m.xp} XP`);
     sfxClear();
     pixCheer();
     if(id==='claude-start') award('power-on');
