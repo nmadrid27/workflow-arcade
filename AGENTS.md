@@ -39,7 +39,7 @@ step:   { h, b, code?, see?, sim?, pad?, path?, where?, hint?, eg?, check?, file
 
 ## Persistence
 
-All progress lives under the `wa-progress` localStorage key: `{ xp, done, practiced, stepAt, pads, branchChoice, openWorlds, guide, badges, soundOn, oriented }`. Every storage call is wrapped in try/catch and **fails silently**; when localStorage is unavailable the app keeps running in memory, so never assume a write succeeded. The certificate name is deliberately excluded: it never enters localStorage.
+All progress lives under the `wa-progress` localStorage key: `{ xp, done, practiced, stepAt, pads, branchChoice, openWorlds, guide, badges, soundOn, oriented, musicOn, musicVol }`. Every storage call is wrapped in try/catch and **fails silently**; when localStorage is unavailable the app keeps running in memory, so never assume a write succeeded. The certificate name is deliberately excluded: it never enters localStorage.
 
 ## Hard constraints
 

@@ -38,6 +38,7 @@ The seven quests are complete and playable. The app includes:
 - A completion certificate rendered on a canvas and downloaded as a PNG once all seven quests are cleared. The learner adds a name for the certificate, and that name is never persisted to the device.
 - An overworld quest map on the home screen with accessible node buttons over a decorative canvas path. The canvas paints three zone bands and a dotted trail between quests; seven keyboard-focusable, aria-labeled node buttons overlay it and open each quest, with cleared, current, and future states.
 - A first-run orientation card on the home screen explaining the arcade mechanics, dismissed once per device.
+- Optional synthesized ambient music (a generative Web Audio chord loop, not licensed tracks), default off, with a footer toggle and volume slider, both persisted.
 - Social and search meta tags, an inline SVG favicon, a skip-to-content link, and a footer link to the GitHub issue tracker.
 
 PIXEL does not call a hosted model. Its status explicitly identifies it as an offline guide.
@@ -144,6 +145,7 @@ Progress saves under the `wa-progress` local-storage key:
 - Saved field-guide entries.
 - Earned badges.
 - Sound preference and whether the orientation card was dismissed.
+- Music on/off preference and music volume.
 
 The certificate name is deliberately excluded from persistence; it lives only in the input and on the canvas. Storage calls fail silently when local storage is unavailable, so the application continues in memory.
 

@@ -56,6 +56,9 @@ const requiredHtml = [
   /REPORT AN ISSUE/,
   /Skip to quest content/,
   /GOT IT/,
+  /MUSIC: /,
+  /toggleMusic/,
+  /Music volume/,
 ];
 
 for (const pattern of requiredHtml) {

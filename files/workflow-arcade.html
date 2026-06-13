@@ -131,7 +131,7 @@
   .btn.ghost{background:var(--panel2);color:var(--ink);}
   .btn.mint{background:var(--mint);}
   .brand:focus-visible,.quest:focus-visible,.world:focus-visible,.btn:focus-visible,.send:focus-visible,.chat-toggle:focus-visible,
-  .codewrap .copy:focus-visible,.resetbtn:focus-visible,.egbtn:focus-visible,.gbtn:focus-visible,
+  .codewrap .copy:focus-visible,.resetbtn:focus-visible,.egbtn:focus-visible,.gbtn:focus-visible,.musvol:focus-visible,
   .composer input:focus-visible,.termrow input:focus-visible,.sandbox textarea:focus-visible,
   .certfield input:focus-visible,.mapnode:focus-visible{
     outline:3px solid var(--mint);outline-offset:3px;
@@ -208,6 +208,7 @@
   }
   .codewrap .copy:hover{background:var(--line);}
   .resetbtn{background:none;border:none;color:var(--muted);font-family:'VT323';font-size:16px;cursor:pointer;text-decoration:underline;padding:0;margin-left:10px;}
+  .musvol{margin-left:8px;vertical-align:middle;width:84px;accent-color:var(--mint);cursor:pointer;}
   .egwrap{border-top:2px solid var(--line);padding:8px 12px 10px;}
   .egbtn{font-family:'Press Start 2P';font-size:7px;cursor:pointer;background:var(--panel2);color:var(--mint);border:2px solid var(--outline);padding:5px 7px;}
   .egbtn:hover{background:var(--line);}
@@ -361,6 +362,8 @@
 <footer style="max-width:1280px;margin:0 auto;padding:0 18px 24px;color:var(--muted);font-size:16px">
   Built through AI-assisted collaboration. Nathan Madrid directed the curriculum and decisions; Codex supported implementation and verification.
   <button class="resetbtn" id="sndbtn" onclick="App.toggleSound()">SOUND: OFF</button>
+  <button class="resetbtn" id="musbtn" onclick="App.toggleMusic()">MUSIC: OFF</button>
+  <input class="musvol" id="musvol" type="range" min="0" max="100" value="45" aria-label="Music volume" oninput="App.setMusicVol(this.value)" />
   <button class="resetbtn" onclick="App.resetProgress()">RESET PROGRESS</button>
   <a class="resetbtn" href="https://github.com/nmadrid27/workflow-arcade/issues" target="_blank" rel="noopener">REPORT AN ISSUE</a>
 </footer>
@@ -722,6 +725,8 @@ const App = (function(){
   let guide = [];           // saved field-guide entries, 'moduleId:stepIndex' keys
   let badges = {};          // earned achievement badges, keyed by badge id
   let soundOn = false;      // 8-bit feedback, default off
+  let musicOn = false;      // synthesized ambient music, default off
+  let musicVol = 45;        // music volume, 0 to 100
   let oriented = false;     // first-run orientation card dismissed
   let history = [];         // chat history for scripted guidance
   let busy = false;
@@ -745,10 +750,12 @@ const App = (function(){
       if(p.badges && typeof p.badges === 'object') badges = p.badges;
       if(typeof p.soundOn === 'boolean') soundOn = p.soundOn;
       if(typeof p.oriented === 'boolean') oriented = p.oriented;
+      if(typeof p.musicOn === 'boolean') musicOn = p.musicOn;
+      if(typeof p.musicVol === 'number') musicVol = Math.max(0, Math.min(100, p.musicVol));
     }catch(e){ /* storage off: run in-memory */ }
   }
   function saveProgress(){
-    try{ localStorage.setItem('wa-progress', JSON.stringify({xp, done, practiced, stepAt, pads, branchChoice, openWorlds, guide, badges, soundOn, oriented})); }
+    try{ localStorage.setItem('wa-progress', JSON.stringify({xp, done, practiced, stepAt, pads, branchChoice, openWorlds, guide, badges, soundOn, oriented, musicOn, musicVol})); }
     catch(e){ /* storage off: skip */ }
   }
 
@@ -1576,6 +1583,65 @@ const App = (function(){
     if(soundOn) sfxPractice();
   }
 
+  /* ---- ambient music: synthesized chords, no assets, default off.
+     This is a mellow generative loop, not licensed lofi tracks. ---- */
+  let musicTimer = null, musicGain = null, musicStep = 0;
+  // four mellow seventh chords (Hz), looped slowly
+  const CHORDS = [
+    [220.00, 261.63, 329.63, 392.00],
+    [196.00, 246.94, 293.66, 349.23],
+    [174.61, 220.00, 277.18, 329.63],
+    [196.00, 246.94, 293.66, 392.00]
+  ];
+  function musicCtx(){
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return null;
+    actx = actx || new AC();
+    return actx;
+  }
+  function musicChord(ctx, freqs, t, dur){
+    freqs.forEach((f,i)=>{
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = i===0 ? 'sine' : 'triangle';
+      o.frequency.value = f;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.9/freqs.length, t+0.5);   // soft swell
+      g.gain.linearRampToValueAtTime(0.0001, t+dur);             // long release
+      o.connect(g).connect(musicGain);
+      o.start(t); o.stop(t+dur+0.1);
+    });
+  }
+  function musicTick(){
+    const ctx = musicCtx(); if(!ctx) return;
+    const dur = 3.6;
+    musicChord(ctx, CHORDS[musicStep % CHORDS.length], ctx.currentTime, dur);
+    musicStep++;
+    musicTimer = setTimeout(musicTick, dur*1000);
+  }
+  function startMusic(){
+    const ctx = musicCtx(); if(!ctx) return;
+    if(ctx.state === 'suspended') ctx.resume();
+    if(!musicGain){ musicGain = ctx.createGain(); musicGain.connect(ctx.destination); }
+    musicGain.gain.value = (musicVol/100) * 0.35;
+    if(!musicTimer) musicTick();
+  }
+  function stopMusic(){
+    if(musicTimer){ clearTimeout(musicTimer); musicTimer = null; }
+    if(musicGain) musicGain.gain.value = 0;
+  }
+  function toggleMusic(){
+    musicOn = !musicOn;
+    saveProgress();
+    const b = document.getElementById('musbtn');
+    if(b) b.textContent = 'MUSIC: ' + (musicOn?'ON':'OFF');
+    if(musicOn) startMusic(); else stopMusic();
+  }
+  function setMusicVol(v){
+    musicVol = Math.max(0, Math.min(100, Number(v)||0));
+    saveProgress();
+    if(musicGain && musicOn) musicGain.gain.value = (musicVol/100) * 0.35;
+  }
+
   function toggleEg(btn){
     const box = btn.nextElementSibling;
     const open = box.hasAttribute('hidden');
@@ -1630,6 +1696,17 @@ const App = (function(){
     inputEl.addEventListener('focus', ()=>PIX.nudge());
     const snd = document.getElementById('sndbtn');
     if(snd) snd.textContent = 'SOUND: ' + (soundOn?'ON':'OFF');
+    const mus = document.getElementById('musbtn');
+    if(mus) mus.textContent = 'MUSIC: ' + (musicOn?'ON':'OFF');
+    const mv = document.getElementById('musvol');
+    if(mv) mv.value = musicVol;
+    // browsers block audio until a user gesture, so honor a saved music-on
+    // preference by starting on the learner's first interaction, once.
+    if(musicOn){
+      const kick = ()=>{ startMusic(); window.removeEventListener('pointerdown',kick); window.removeEventListener('keydown',kick); };
+      window.addEventListener('pointerdown', kick);
+      window.addEventListener('keydown', kick);
+    }
     // arrow keys page the walkthrough unless the learner is typing
     document.addEventListener('keydown', e=>{
       if(e.key!=='ArrowLeft' && e.key!=='ArrowRight') return;
@@ -1642,7 +1719,7 @@ const App = (function(){
     setTimeout(()=>pixLine("Hi, I am PIXEL, your offline guide. Start quest one to create a Claude Code project, or ask me for a scripted hint."), 600);
   }
 
-  return { init, goHome, openModule, complete, say, toggleChat, walk, hint, choosePath, changePath, copyCode, resetProgress, toggleEg, toggleWorld, checkPad, toggleGuideStep, openGuide, downloadGuide, copyGuide, downloadStepFile, toggleSound, openCert, downloadCert, dismissOrient };
+  return { init, goHome, openModule, complete, say, toggleChat, walk, hint, choosePath, changePath, copyCode, resetProgress, toggleEg, toggleWorld, checkPad, toggleGuideStep, openGuide, downloadGuide, copyGuide, downloadStepFile, toggleSound, openCert, downloadCert, dismissOrient, toggleMusic, setMusicVol };
 })();
 
 App.init();
