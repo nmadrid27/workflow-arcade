@@ -213,7 +213,7 @@ function trackNum(t){ const s=stageOfTrack(t.id); return s ? s.tracks.indexOf(t)
 function stepKey(t,i){ return t.id+':'+i; }
 function trackDoneCount(t){ return t.steps.filter((_,i)=>state.done[stepKey(t,i)]).length; }
 function trackComplete(t){ return t.steps.length>0 && trackDoneCount(t)===t.steps.length; }
-function stageComplete(s){ return s.tracks.every(trackComplete); }
+function stageComplete(s){ return s.tracks.length>0 && s.tracks.every(trackComplete); }
 function stageUnlocked(s){ const i=STAGES.indexOf(s); return i===0 || stageComplete(STAGES[i-1]); }
 function trackUnlocked(t){ const s=stageOfTrack(t.id); if(!s || !stageUnlocked(s)) return false; const ti=s.tracks.indexOf(t); return ti===0 || trackComplete(s.tracks[ti-1]); }
 function activeStage(){ if(state.trackId){ const s=stageOfTrack(state.trackId); if(s) return s; } return STAGES.find(s=>stageUnlocked(s) && !stageComplete(s)) || STAGES[STAGES.length-1]; }
