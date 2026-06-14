@@ -28,6 +28,7 @@ const requiredHtml = [
   /SOMETHING LOOKS OFF/,
   /GOT IT/,
   /WHAT THIS MEANS/,
+  /OFF-RAMP A/,
   // chrome, the link back to the arcade, a11y, disclosure
   /workflow-arcade\.html/,
   /Skip to the steps/,
