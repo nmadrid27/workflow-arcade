@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Workflow Arcade · Live</title>
+<meta name="description" content="The do-it-for-real companion to Workflow Arcade. Personalized real commands and steps that guide first-time macOS users through Claude Code on their own machine. One HTML file, fully offline, never runs anything for you." />
+<meta property="og:title" content="Workflow Arcade · Live" />
+<meta property="og:description" content="Do all seven Workflow Arcade quests for real on your own Mac, with personalized commands and clear checkpoints." />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23070a10'/%3E%3Crect x='2' y='3' width='12' height='11' fill='%2322d3ee'/%3E%3Crect x='4' y='5' width='8' height='6' fill='%23070a10'/%3E%3Crect x='6' y='7' width='4' height='2' fill='%2334d399'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&amp;family=VT323&amp;display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#070a10}
+  body{font-family:'VT323',ui-monospace,monospace;-webkit-font-smoothing:none;color:#e8edf2}
+  textarea,input,button{font-family:inherit}
+  input::placeholder{color:#5a6472}
+  a.wa-skip{position:absolute;left:-9999px;top:0;z-index:100;background:#22d3ee;color:#05080d;font-family:'Press Start 2P';font-size:10px;padding:10px 14px;border:3px solid #05080d;text-decoration:none;}
+  a.wa-skip:focus{left:10px;top:10px;}
+  :focus-visible{outline:3px solid #34d399;outline-offset:2px;}
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important;transition:none !important;}
+  }
+</style>
+</head>
+<body>
+<a class="wa-skip" href="#wa-content">Skip to the steps</a>
+<div id="wa-status" aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);"></div>
+<div id="wa-root"></div>
+
+<script>
+"use strict";
+(function(){
+/* ============================================================
+   DATA
+   ============================================================ */
+const LIVE_KEY = 'wa-arcade-live-v1';     // this app writes here
+const ARCADE_KEY = 'wa-arcade-proto-v1';  // the arcade's key; read only, never written
+
+const STAGES = [
+  { id:'a', title:'STAGE A · DO IT FOR REAL', intent:'Every quest you played in the arcade, now on your own machine.',
+    tracks:[
+    { id:'t1', quest:'q1', title:'Start Your First Claude Code Project', intent:'Create a real project folder, install Claude Code, and generate CLAUDE.md.',
+      steps:[
+        { id:'t1s1', action:'Create your project folder', where:'{projectsDir}', commands:[{cmd:'mkdir -p {projectsDir}/{project}',prompt:'$'}],
+          expect:'Terminal returns to a fresh prompt with no message. No news is good news: the folder now exists.',
+          trouble:'If you see "permission denied", you are trying to create the folder somewhere you do not own. Keep the path under your home folder, which is what ~ means.' },
+        { id:'t1s2', action:'Move into the folder and confirm where you are', where:'{projectsDir}/{project}', commands:[{cmd:'cd {projectsDir}/{project}',prompt:'$'},{cmd:'pwd',prompt:'$'}],
+          expect:'pwd prints the full path to your project, ending in /{project}.',
+          trouble:'If pwd does not end in your project name, run the cd line again and check the spelling of the folder.' },
+        { id:'t1s3', action:'Install Claude Code, then confirm it is ready', where:'{projectsDir}/{project}', commands:[{cmd:'curl -fsSL https://claude.ai/install.sh | bash',prompt:'$'},{cmd:'claude --version',prompt:'$'}],
+          expect:'The installer finishes, then claude --version prints a version number.',
+          trouble:'If you see "claude: command not found", quit and reopen Terminal so it picks up the new install, then run claude --version again.' },
+        { id:'t1s4', action:'Open Claude Code in your project', where:'{projectsDir}/{project}', commands:[{cmd:'claude',prompt:'$'}],
+          expect:'On the first run a browser opens so you can sign in. After that, Terminal shows a > prompt waiting for you.',
+          trouble:'If no browser opens, copy the link Claude prints and paste it into your browser to finish signing in.' },
+        { id:'t1s5', action:'Generate your CLAUDE.md with /init', where:'{projectsDir}/{project}', commands:[{cmd:'/init',prompt:'claude >'}],
+          expect:'Claude looks through the folder and writes a CLAUDE.md file, then returns to the > prompt. Your project now has a CLAUDE.md.',
+          trouble:'Type /init at the Claude > prompt, not the plain Terminal $ prompt. If nothing happens, make sure you are still inside Claude Code.' },
+      ] },
+    { id:'t2', quest:'q2', title:'Teach Claude How to Work With You', intent:'Turn CLAUDE.md into a short, testable profile of how you want to work.',
+      steps:[
+        { id:'t2s1', action:'Open CLAUDE.md to edit it', where:'{projectsDir}/{project}', commands:[{cmd:'open -e {projectsDir}/{project}/CLAUDE.md',prompt:'$'}],
+          expect:'CLAUDE.md opens in TextEdit, showing the starter notes /init wrote.',
+          trouble:'If TextEdit opens an empty file, /init may not have run. Go back to the first track and run /init, then try again.' },
+        { id:'t2s2', action:'Add a short "How to work with me" block with three lines: a communication preference, an evidence rule, and a decision boundary', where:'{projectsDir}/{project}', commands:[],
+          expect:'Your CLAUDE.md has three checkable lines, for example "Lead with the answer", "Cite a source for any fact", and "Ask before deleting files". Save the file.',
+          trouble:'Keep each line a behavior you can check. "Be concise" is checkable; "be helpful" is not. One line each is plenty.' },
+        { id:'t2s3', action:'Confirm Claude is reading your rules', where:'{projectsDir}/{project}', commands:[{cmd:'Summarize the working rules from my CLAUDE.md.',prompt:'claude >'}],
+          expect:'Claude restates your three rules back to you, which shows it loaded CLAUDE.md.',
+          trouble:'If Claude does not mention your rules, make sure you saved CLAUDE.md and that you are running Claude Code from inside the project folder.' },
+      ] },
+    { id:'t3', quest:'q3', title:'Add ESF Companion', intent:'Install the Companion, run onboarding, and write the Position Statement that anchors the work.',
+      steps:[
+        { id:'t3s1', action:'Install ESF Companion', where:'{projectsDir}/{project}', commands:[{cmd:'curl -fsSL https://raw.githubusercontent.com/nmadrid27/esf-companion/main/install.sh | bash',prompt:'$'}],
+          expect:'The installer asks which AI tool you use and whether to install globally or for this project, then reports it set up an agent, skills, templates, and an esf/ workspace.',
+          trouble:'Run this in Terminal, not at the Claude > prompt. If it cannot reach the internet, check your connection and run it again.' },
+        { id:'t3s2', action:'Run onboarding inside Claude Code', where:'{projectsDir}/{project}', commands:[{cmd:'/esf-onboarding',prompt:'claude >'}],
+          expect:'Onboarding starts, sets up your profile, and points you toward writing your first Position Statement.',
+          trouble:'If /esf-onboarding is not found, the install may have been project-only for a different folder. Re-run the installer and choose this project, or install globally.' },
+        { id:'t3s3', action:'Write your Position Statement: what you are making, what matters most, and the line AI will not cross', where:'{projectsDir}/{project}', commands:[],
+          expect:'You have three short lines of your own direction, written before AI explores. Rough is fine; the Companion can read it back and tighten it.',
+          trouble:'This is your stance, not a prompt. If you are stuck, name one thing that is yours to decide and would bother you if AI decided it.' },
+      ] },
+    { id:'t4', quest:'q4', title:'Complete Your First Small Project', intent:'Direct a small real project against your position, verify it, and disclose honestly.',
+      steps:[
+        { id:'t4s1', action:'Choose a small, finishable project you will actually use', where:'', commands:[],
+          expect:'You can name a project that fits one or two sessions, has a clear finish, and needs no new accounts.',
+          trouble:'If it feels big, cut it down. "A one-page site for one event" beats "my whole portfolio".' },
+        { id:'t4s2', action:'Define done as checks you can run', where:'', commands:[],
+          expect:'You have two or three concrete checks, for example "opens on my phone" or "the link works", not "looks good".',
+          trouble:'Turn each feeling into a test. "Feels fast" becomes "loads before I count to three".' },
+        { id:'t4s3', action:'Explore with AI while you keep the decision', where:'{projectsDir}/{project}', commands:[{cmd:'Give me three approaches with tradeoffs. I will choose.',prompt:'claude >'}],
+          expect:'Claude offers options and tradeoffs and leaves the choice to you. You pick one on purpose.',
+          trouble:'If the work drifts from your Position Statement, you have three honest moves: correct the drift, update your position, or continue on purpose.' },
+        { id:'t4s4', action:'Capture a Record of Resistance whenever you reject or change AI output', where:'{projectsDir}/{project}', commands:[],
+          expect:'You have written, for at least one moment, what AI suggested, why you rejected it, and what you did instead.',
+          trouble:'This is the paper trail of your judgment. Even one honest entry is worth more than none.' },
+        { id:'t4s5', action:'Verify the result against each of your done checks', where:'', commands:[],
+          expect:'You ran each check yourself and the project passes, or you know exactly what still fails.',
+          trouble:'Do not assume a check passes because Claude says so. Run it. This is the "Did I verify?" question.' },
+        { id:'t4s6', action:'Draft and own your disclosure', where:'{projectsDir}/{project}', commands:[{cmd:'Draft a disclosure from my AI Use Log and Records of Resistance.',prompt:'claude >'}],
+          expect:'The Companion drafts a Disclosure Statement covering what you directed, what AI contributed, what you rejected or changed, and what you verified. You review and edit it until it is true.',
+          trouble:'The draft is a starting point, not the truth. Change anything that overstates or understates what you actually did.' },
+      ] },
+    { id:'t5', quest:'q5', title:'Steer the Session', intent:'Read permission prompts, interrupt, plan first, and make corrections stick.',
+      steps:[
+        { id:'t5s1', action:'Read every permission prompt before you approve it', where:'{projectsDir}/{project}', commands:[],
+          expect:'When Claude asks to run a command or edit a file, you read the exact action it names, not just the buttons.',
+          trouble:'If you would not run the named command yourself, decline it. You are allowed to say no.' },
+        { id:'t5s2', action:'Practice interrupting with the Esc key', where:'{projectsDir}/{project}', commands:[],
+          expect:'Pressing Esc stops the current action without ending the session, and you can immediately say what you want instead.',
+          trouble:'Esc is your brake. Use it the moment you see the wrong file or direction; nothing is lost.' },
+        { id:'t5s3', action:'Reach plan mode with Shift+Tab before any big change', where:'{projectsDir}/{project}', commands:[],
+          expect:'Shift+Tab cycles the permission mode (default, accept edits, plan); the current mode shows in the status line. In plan mode Claude proposes but changes nothing.',
+          trouble:'Approve a plan only when you can restate it in your own words. If you cannot, ask for it to be simpler.' },
+        { id:'t5s4', action:'Promote a repeated correction into CLAUDE.md', where:'{projectsDir}/{project}', commands:[{cmd:'open -e {projectsDir}/{project}/CLAUDE.md',prompt:'$'}],
+          expect:'A rule you have had to repeat now lives in CLAUDE.md, for example "Always show me the diff before editing a file". Save it.',
+          trouble:'If you corrected the same thing twice, it belongs in CLAUDE.md so you never have to say it a third time.' },
+      ] },
+    { id:'t6', quest:'q6', title:'Put the Project Under Version Control', intent:'Start a git history, read the diff, and let Claude commit.',
+      steps:[
+        { id:'t6s1', action:'Start a git history in your project', where:'{projectsDir}/{project}', commands:[{cmd:'git init',prompt:'$'}],
+          expect:'Git reports it initialized an empty repository. Nothing is saved yet; that is the next step.',
+          trouble:'If "git: command not found" appears, macOS will offer to install the developer tools. Accept, wait for it to finish, then run git init again.' },
+        { id:'t6s2', action:'Stage your work and read the diff before saving it', where:'{projectsDir}/{project}', commands:[{cmd:'git add -A',prompt:'$'},{cmd:'git diff --staged',prompt:'$'}],
+          expect:'The diff lists the files about to be saved and the lines added. Read it; this is where your judgment lives.',
+          trouble:'Press the space bar to scroll the diff and q to quit back to the prompt.' },
+        { id:'t6s3', action:'Let Claude write the commit message, then approve it', where:'{projectsDir}/{project}', commands:[{cmd:'Commit my work with a clear message.',prompt:'claude >'}],
+          expect:'Claude proposes a commit and asks to run git. Approve it only if the message accurately names what changed.',
+          trouble:'If the message is vague or wrong, decline and ask for a more specific one before approving.' },
+        { id:'t6s4', action:'Confirm the checkpoint exists', where:'{projectsDir}/{project}', commands:[{cmd:'git log --oneline',prompt:'$'}],
+          expect:'The log shows at least one line: a short id and your commit message. That line is a checkpoint you can return to.',
+          trouble:'If the log is empty, the commit did not happen. Go back a step and approve the commit.' },
+      ] },
+    { id:'t7', quest:'q7', title:'Recover When It Goes Wrong', intent:'Stop, inspect, revert to your last good checkpoint, and keep the lesson.',
+      steps:[
+        { id:'t7s1', action:'Stop and inspect before you fix anything', where:'{projectsDir}/{project}', commands:[{cmd:'git status',prompt:'$'}],
+          expect:'Git shows which files changed since your last commit. You now know what is different, before touching anything.',
+          trouble:'Do not pile on fixes. The first move when something looks wrong is to look, not to act.' },
+        { id:'t7s2', action:'Read the unwanted change, then restore that file', where:'{projectsDir}/{project}', commands:[{cmd:'git diff index.html',prompt:'$'},{cmd:'git restore index.html',prompt:'$'}],
+          expect:'The diff shows the unwanted change; git restore returns that file to your last commit. Replace index.html with the file you actually changed.',
+          trouble:'git restore discards changes since the last commit for that file. If you are unsure, read the diff first; that is the checkpoint.' },
+        { id:'t7s3', action:'Confirm you are back to a clean state', where:'{projectsDir}/{project}', commands:[{cmd:'git status',prompt:'$'}],
+          expect:'Git reports "nothing to commit, working tree clean". The recovery worked.',
+          trouble:'If it still lists changes, restore the remaining files you did not mean to change, then check status again.' },
+        { id:'t7s4', action:'Promote the lesson into CLAUDE.md so it does not happen twice', where:'{projectsDir}/{project}', commands:[{cmd:'open -e {projectsDir}/{project}/CLAUDE.md',prompt:'$'}],
+          expect:'CLAUDE.md now has one concrete rule that would have prevented this, for example "Commit a working state before any large edit". Save it.',
+          trouble:'A mistake becomes useful the moment it turns into a rule. Keep it to one concrete line.' },
+      ] },
+    ] }
+];
+/* ============================================================
+   STATE
+   ============================================================ */
+const state = {
+  view:'home',          // 'setup' | 'home' | 'track'
+  setupDone:false,
+  project:'',
+  projectsDir:'~/projects',
+  trackId:null,
+  step:0,
+  done:{},              // { 'trackId:stepIndex': true }
+  stepAt:{},            // { trackId: lastStepIndex } for resume
+  trouble:{},           // transient: which step's trouble note is open
+  copiedKey:null        // transient: copy-button feedback
+};
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+const esc = (s)=> String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function fill(s){
+  return String(s==null?'':s)
+    .replace(/\{projectsDir\}/g, state.projectsDir || '~/projects')
+    .replace(/\{project\}/g, state.project || 'my-project');
+}
+function css(obj){
+  if(typeof obj==='string') return obj;
+  if(!obj) return '';
+  let out='';
+  for(const k in obj){ let v=obj[k]; if(v==null) continue; const prop=k.replace(/[A-Z]/g,m=>'-'+m.toLowerCase()); out += prop+':'+v+';'; }
+  return out;
+}
+const sa = (obj)=> ' style="'+esc(css(obj))+'"';
+
+function load(){
+  try{
+    const raw = localStorage.getItem(LIVE_KEY); if(!raw) return; const p = JSON.parse(raw);
+    state.setupDone=!!p.setupDone; state.project=p.project||''; state.projectsDir=p.projectsDir||'~/projects';
+    state.done=p.done||{}; state.stepAt=p.stepAt||{};
+  }catch(e){}
+}
+function persist(){
+  try{
+    localStorage.setItem(LIVE_KEY, JSON.stringify({
+      setupDone:state.setupDone, project:state.project, projectsDir:state.projectsDir, done:state.done, stepAt:state.stepAt
+    }));
+  }catch(e){}
+}
+function announce(msg){ const el=document.getElementById('wa-status'); if(!el) return; el.textContent=''; setTimeout(()=>{ el.textContent=msg; },10); }
+function readArcade(){ try{ const raw=localStorage.getItem(ARCADE_KEY); if(!raw) return {}; const p=JSON.parse(raw); return p.cleared||{}; }catch(e){ return {}; } }
+
+function stageA(){ return STAGES[0]; }
+function trackById(id){ return stageA().tracks.find(t=>t.id===id); }
+function idxOfTrack(id){ return stageA().tracks.findIndex(t=>t.id===id); }
+function stepKey(t,i){ return t.id+':'+i; }
+function trackDoneCount(t){ return t.steps.filter((_,i)=>state.done[stepKey(t,i)]).length; }
+function trackComplete(t){ return t.steps.length>0 && trackDoneCount(t)===t.steps.length; }
+function trackUnlocked(idx){ return idx===0 || trackComplete(stageA().tracks[idx-1]); }
+function curTrack(){ return trackById(state.trackId); }
+function curStep(){ const t=curTrack(); return t ? t.steps[state.step] : null; }
+function surfaceOf(st){
+  if(!st.commands || !st.commands.length) return '';
+  if(st.commands.some(c=>/claude/i.test(c.prompt||''))) return '⌘ CLAUDE CODE';
+  if(st.commands.some(c=>(c.prompt||'').trim()==='$')) return '⌨ TERMINAL';
+  return '';
+}
+/* ============================================================
+   ACTIONS
+   ============================================================ */
+function goHome(){ state.view='home'; render(); }
+function editSetup(){ state.view='setup'; render(); }
+function onProject(e){ state.project=e.target.value; }
+function onProjectsDir(e){ state.projectsDir=e.target.value; }
+function saveSetup(){
+  if(!state.project.trim()) state.project='my-project';
+  if(!state.projectsDir.trim()) state.projectsDir='~/projects';
+  state.setupDone=true; persist(); announce('Setup saved. Your commands are personalized.');
+  state.view='home'; render();
+}
+function openTrack(id){
+  const idx=idxOfTrack(id); if(idx<0 || !trackUnlocked(idx)) return;
+  state.view='track'; state.trackId=id; state.step=state.stepAt[id]||0; state.trouble={}; render();
+}
+function resume(){ const t=stageA().tracks.find(tr=>!trackComplete(tr)); if(t) openTrack(t.id); else { state.view='home'; render(); } }
+function back(){ if(state.step>0){ state.step--; state.trouble={}; render(); } }
+function confirmStep(){
+  const t=curTrack(); if(!t) return; const k=stepKey(t,state.step);
+  state.done[k]=true; const ns=Math.min(state.step+1, t.steps.length-1); state.stepAt[t.id]=ns; persist();
+  if(state.step < t.steps.length-1){ state.step=ns; state.trouble={}; announce('Step done.'); render(); }
+  else { announce('Track complete: '+t.title); state.view='home'; render(); }
+}
+function toggleTrouble(){ const t=curTrack(); if(!t) return; const k=stepKey(t,state.step); state.trouble[k]=!state.trouble[k]; render(); }
+function copyCmd(ci){
+  const st=curStep(); if(!st || !st.commands || !st.commands[ci]) return;
+  try{ navigator.clipboard.writeText(fill(st.commands[ci].cmd)); }catch(e){}
+  state.copiedKey='cmd:'+ci; announce('Command copied to clipboard.'); render();
+  clearTimeout(copyCmd._t); copyCmd._t=setTimeout(()=>{ state.copiedKey=null; render(); },1200);
+}
+function reset(){
+  if(!window.confirm('Reset your Live companion progress on this device? This does not touch your arcade progress.')) return;
+  state.view='home'; state.setupDone=false; state.project=''; state.projectsDir='~/projects';
+  state.trackId=null; state.step=0; state.done={}; state.stepAt={}; state.trouble={};
+  try{ localStorage.removeItem(LIVE_KEY); }catch(e){}
+  persist(); announce('Live progress reset.'); render();
+}
+
+window.WA = { goHome, editSetup, onProject, onProjectsDir, saveSetup, openTrack, resume, back, confirmStep, toggleTrouble, copyCmd, reset };
+/* ============================================================
+   RENDER: chrome
+   ============================================================ */
+function topBar(){
+  const st=stageA(); const total=st.tracks.length; const done=st.tracks.filter(trackComplete).length; const pct=Math.round(done/total*100);
+  const fillStyle={ position:'absolute', inset:0, width:pct+'%', background:'#22d3ee' };
+  return `
+  <div style="display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:3px solid #05080d;background:#0b0f16;position:relative;z-index:40;">
+    <button onclick="WA.goHome()" aria-label="Companion home" style="display:flex;align-items:center;gap:11px;background:none;border:0;cursor:pointer;padding:0;color:inherit;">
+      <span aria-hidden="true" style="width:30px;height:30px;background:#22d3ee;border:3px solid #05080d;display:grid;place-items:center;"><span style="width:11px;height:11px;background:#05080d;"></span></span>
+      <span style="font-family:'Press Start 2P';font-size:11px;letter-spacing:1px;color:#e8edf2;">WORKFLOW ARCADE <span style="color:#22d3ee;">LIVE</span></span>
+    </button>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:14px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-family:'Press Start 2P';font-size:8px;color:#34d399;">REAL PROGRESS</span>
+        <div style="width:120px;height:14px;background:#05080d;border:3px solid #243043;position:relative;"><div${sa(fillStyle)}></div></div>
+        <span style="font-family:'Press Start 2P';font-size:8px;color:#8893a4;">${done} / ${total}</span>
+      </div>
+      <a href="workflow-arcade.html" title="Back to the arcade" style="font-family:'Press Start 2P';font-size:8px;color:#34d399;background:#0b0f16;border:3px solid #243043;padding:8px 10px;text-decoration:none;">◂ ARCADE</a>
+    </div>
+  </div>`;
+}
+
+function footer(){
+  return `
+  <div style="border-top:3px solid #05080d;background:#080b11;padding:16px 22px;display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+      <button onclick="WA.reset()" style="font-family:'Press Start 2P';font-size:8px;color:#8893a4;background:#0b0f16;border:3px solid #243043;padding:9px 12px;cursor:pointer;">↺ RESET LIVE PROGRESS</button>
+      <a href="workflow-arcade.html" style="font-family:'Press Start 2P';font-size:8px;color:#34d399;background:#070a10;border:3px solid #34d399;padding:9px 12px;text-decoration:none;">◂ BACK TO THE ARCADE</a>
+      <span style="font-family:'Press Start 2P';font-size:7px;color:#4a5666;margin-left:auto;">● THIS APP NEVER RUNS ANYTHING FOR YOU</span>
+    </div>
+    <div style="font-size:15px;color:#4a5666;line-height:1.3;">Built through AI-assisted collaboration. Nathan Madrid directed the curriculum and decisions; Codex and Claude Code supported implementation and verification.</div>
+  </div>`;
+}
+/* ============================================================
+   RENDER: views
+   ============================================================ */
+function viewSetup(){
+  return `
+  <div style="max-width:620px;margin:0 auto;padding:34px 26px 40px;">
+    <div style="font-family:'Press Start 2P';font-size:9px;color:#22d3ee;letter-spacing:2px;margin-bottom:14px;">▸ SET UP YOUR REAL PROJECT</div>
+    <h2 style="font-family:'Press Start 2P';font-size:18px;line-height:1.5;margin:0 0 14px;">DO IT FOR REAL</h2>
+    <p style="font-size:20px;color:#aab4c2;line-height:1.35;margin:0 0 24px;">Tell me two things and every command below becomes yours: your real folder, your real paths. I never run anything or read your disk. You run each command yourself, in your own Terminal.</p>
+    <div style="border:3px solid #243043;background:#0b0f16;padding:18px;margin-bottom:18px;">
+      <label for="wa-project" style="font-family:'Press Start 2P';font-size:8px;color:#34d399;display:block;margin-bottom:9px;">PROJECT NAME</label>
+      <input id="wa-project" value="${esc(state.project)}" oninput="WA.onProject(event)" placeholder="my-first-site" style="width:100%;border:3px solid #34d399;background:#070a10;padding:11px 12px;font-family:'VT323';font-size:21px;color:#e8edf2;outline:none;margin-bottom:6px;" />
+      <div style="font-size:15px;color:#7c8696;">Lowercase, no spaces. Hyphens are fine.</div>
+    </div>
+    <div style="border:3px solid #243043;background:#0b0f16;padding:18px;margin-bottom:22px;">
+      <label for="wa-dir" style="font-family:'Press Start 2P';font-size:8px;color:#34d399;display:block;margin-bottom:9px;">WHERE YOU KEEP PROJECTS</label>
+      <input id="wa-dir" value="${esc(state.projectsDir)}" oninput="WA.onProjectsDir(event)" placeholder="~/projects" style="width:100%;border:3px solid #243043;background:#070a10;padding:11px 12px;font-family:'VT323';font-size:21px;color:#e8edf2;outline:none;margin-bottom:6px;" />
+      <div style="font-size:15px;color:#7c8696;">Default is ~/projects, a folder in your home directory. Keep it unless you already have a place.</div>
+    </div>
+    <div style="border:2px solid #243043;background:#0b0f16;padding:12px 14px;margin-bottom:22px;font-family:'VT323';font-size:19px;color:#34d399;">$ cd ${esc(fill('{projectsDir}/{project}'))}</div>
+    <button onclick="WA.saveSetup()" style="font-family:'Press Start 2P';font-size:11px;color:#05080d;background:#22d3ee;border:3px solid #05080d;padding:14px 18px;cursor:pointer;">START FOR REAL ▸</button>
+  </div>`;
+}
+function viewHome(){
+  const st=stageA(); const arcade=readArcade();
+  const tracksHtml = st.tracks.map((t,idx)=>{
+    const dc=trackDoneCount(t); const complete=trackComplete(t); const unl=trackUnlocked(idx);
+    const arcadeCleared = t.quest && arcade[t.quest];
+    let statusLabel, accent;
+    if(complete){ statusLabel='DONE ✓'; accent='#34d399'; }
+    else if(!unl){ statusLabel='LOCKED'; accent='#3a4759'; }
+    else if(dc>0){ statusLabel='RESUME ▸'; accent='#22d3ee'; }
+    else { statusLabel='START ▸'; accent='#22d3ee'; }
+    const readyChip = (arcadeCleared && !complete && unl) ? `<span style="font-family:'Press Start 2P';font-size:6px;color:#34d399;border:2px solid #34d399;padding:4px 6px;white-space:nowrap;">PLAYED ✓ DO IT LIVE</span>` : '';
+    const rowStyle={ display:'flex', alignItems:'center', gap:'14px', width:'100%', textAlign:'left', color:'inherit', border:'3px solid '+(complete?'#1f5a43':(unl?'#243043':'#1a2230')), background:'#0b0f16', padding:'14px 16px', cursor: unl?'pointer':'not-allowed', opacity: unl?'1':'.6' };
+    const numStyle={ width:'34px', height:'34px', flex:'none', display:'grid', placeItems:'center', fontFamily:"'Press Start 2P'", fontSize:'11px', border:'3px solid #05080d', background: complete?'#34d399':'#16202c', color: complete?'#05080d':accent };
+    const statusWord = complete?'done':(unl?(dc>0?'resume':'start'):'locked');
+    return `<button onclick="WA.openTrack('${t.id}')"${unl?'':' aria-disabled="true"'} aria-label="Track ${idx+1}, ${esc(t.title)}, ${statusWord}"${sa(rowStyle)}>
+      <span aria-hidden="true"${sa(numStyle)}>${complete?'✓':(idx+1)}</span>
+      <span style="flex:1;min-width:0;">
+        <span style="font-size:19px;color:#e8edf2;">${esc(t.title)}</span>
+        <span style="display:block;font-size:15px;color:#8893a4;margin-top:3px;">${esc(t.intent)}</span>
+      </span>
+      ${readyChip}
+      <span style="font-family:'Press Start 2P';font-size:7px;color:${accent};white-space:nowrap;">${dc}/${t.steps.length} · ${esc(statusLabel)}</span>
+    </button>`;
+  }).join('');
+  const total=st.tracks.length; const done=st.tracks.filter(trackComplete).length;
+  return `
+  <div style="padding:26px 26px 30px;">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;flex-wrap:wrap;">
+      <span style="font-family:'Press Start 2P';font-size:11px;color:#e8edf2;">${esc(st.title)}</span>
+      <span style="font-size:16px;color:#8893a4;">${done} of ${total} tracks done for real</span>
+      <button onclick="WA.editSetup()" style="margin-left:auto;font-family:'Press Start 2P';font-size:7px;color:#22d3ee;background:#0b0f16;border:2px solid #22d3ee;padding:7px 9px;cursor:pointer;">✎ EDIT SETUP</button>
+    </div>
+    <p style="font-size:18px;color:#aab4c2;line-height:1.35;margin:0 0 18px;max-width:740px;">${esc(st.intent)} Working in: <span style="color:#34d399;">${esc(fill('{projectsDir}/{project}'))}</span></p>
+    <div style="display:flex;flex-direction:column;gap:10px;">${tracksHtml}</div>
+  </div>`;
+}
+function viewTrack(){
+  const t=curTrack(); if(!t) return viewHome();
+  const i=Math.min(state.step, t.steps.length-1); const st=t.steps[i]; const key=stepKey(t,i);
+  const isLast=i===t.steps.length-1; const done=!!state.done[key]; const idx=idxOfTrack(t.id);
+
+  const progress=t.steps.map((_,j)=>{ const stl={ flex:1, height:'8px', background: state.done[stepKey(t,j)]?'#34d399':(j===i?'#22d3ee':'#16202c') }; return `<span aria-hidden="true"${sa(stl)}></span>`; }).join('');
+
+  let cmdsHtml='';
+  if(st.commands && st.commands.length){
+    const rows=st.commands.map((c,ci)=>{
+      const shown=(c.prompt?c.prompt+' ':'')+fill(c.cmd);
+      const copied=state.copiedKey===('cmd:'+ci);
+      return `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;color:#34d399;"><span>${esc(shown)}</span><button onclick="WA.copyCmd(${ci})" aria-label="Copy command to clipboard" style="font-family:'Press Start 2P';font-size:6px;color:#22d3ee;background:#0b0f16;border:2px solid #243043;padding:3px 6px;cursor:pointer;flex:none;">${copied?'COPIED ✓':'⧉ COPY'}</button></div>`;
+    }).join('');
+    cmdsHtml=`<div style="border:3px solid #243043;background:#05080d;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:6px;padding:7px 10px;border-bottom:2px solid #16202c;"><span style="font-family:'Press Start 2P';font-size:7px;color:#8893a4;">RUN THIS YOURSELF</span></div>
+      <div style="padding:12px 14px;font-family:'VT323';font-size:20px;line-height:1.5;">${rows}</div>
+    </div>`;
+  }
+
+  const expectHtml=`<div style="border:3px solid #1f5a43;background:#0a1410;padding:13px 15px;margin-bottom:14px;">
+    <div style="font-family:'Press Start 2P';font-size:7px;color:#34d399;margin-bottom:8px;">✓ WHAT YOU SHOULD SEE</div>
+    <div style="font-size:18px;color:#cfe9df;line-height:1.32;">${esc(fill(st.expect))}</div>
+  </div>`;
+
+  const troubleOpen=!!state.trouble[key];
+  const troubleHtml=`<div style="margin-bottom:14px;">
+    <button onclick="WA.toggleTrouble()" aria-expanded="${troubleOpen}" style="font-family:'Press Start 2P';font-size:8px;color:#fbbf24;background:#0b0f16;border:2px solid #fbbf24;padding:9px 11px;cursor:pointer;">${troubleOpen?'HIDE TROUBLESHOOTING':'SOMETHING LOOKS OFF'}</button>
+    ${troubleOpen?`<div style="border:2px solid #5a4a1a;background:#15120a;padding:11px 13px;margin-top:9px;font-size:17px;color:#e7dca8;line-height:1.32;">${esc(fill(st.trouble))}</div>`:''}
+  </div>`;
+
+  const wherePath = st.where ? fill(st.where) : '';
+  const whereHtml = wherePath ? `<div style="font-size:16px;color:#7c8696;margin:0 0 12px;">In: <span style="color:#34d399;">${esc(wherePath)}</span></div>` : '';
+  const surface = surfaceOf(st);
+  const whereChip = surface ? `<span style="font-family:'Press Start 2P';font-size:7px;color:#34d399;border:2px solid #1f5a43;background:#0a1410;padding:5px 7px;margin-left:auto;">${esc(surface)}</span>` : '';
+
+  const nav=`<div style="display:flex;gap:12px;align-items:center;">
+    <button onclick="WA.back()"${i===0?' disabled aria-disabled="true"':''} style="font-family:'Press Start 2P';font-size:9px;color:#8893a4;background:#0b0f16;border:3px solid #243043;padding:12px 16px;cursor:${i===0?'not-allowed':'pointer'};opacity:${i===0?'.5':'1'};">◂ BACK</button>
+    <button onclick="WA.confirmStep()" style="font-family:'Press Start 2P';font-size:10px;color:#05080d;background:#34d399;border:3px solid #05080d;padding:12px 18px;cursor:pointer;margin-left:auto;">${isLast?'IT WORKED · FINISH TRACK ✓':'IT WORKED · NEXT ▸'}</button>
+  </div>`;
+
+  return `
+  <div style="max-width:760px;margin:0 auto;padding:22px 24px 30px;">
+    <button onclick="WA.goHome()" style="font-family:'Press Start 2P';font-size:8px;color:#8893a4;background:none;border:0;cursor:pointer;padding:0;margin-bottom:14px;">◂ ALL TRACKS</button>
+    <div style="font-family:'Press Start 2P';font-size:9px;color:#22d3ee;margin-bottom:8px;">TRACK ${idx+1} · ${esc(t.title)}</div>
+    <p style="font-size:18px;color:#8893a4;margin:0 0 14px;">${esc(t.intent)}</p>
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:18px;">
+      <span style="font-family:'Press Start 2P';font-size:8px;color:#8893a4;margin-right:6px;white-space:nowrap;">STEP ${i+1}/${t.steps.length}</span>
+      ${progress}
+    </div>
+    <div style="border:3px solid #243043;background:#0b0f16;padding:18px;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+        <span style="font-family:'Press Start 2P';font-size:12px;color:#22d3ee;">${(i+1<10?'0':'')+(i+1)}</span>
+        <span style="font-family:'Press Start 2P';font-size:11px;color:#e8edf2;line-height:1.4;">${esc(fill(st.action))}</span>
+        ${whereChip}
+      </div>
+      ${whereHtml}
+      ${cmdsHtml}
+      ${expectHtml}
+      ${troubleHtml}
+      ${done?`<div style="font-size:15px;color:#34d399;margin-bottom:12px;">You marked this step done. Revisit any time.</div>`:''}
+      ${nav}
+    </div>
+  </div>`;
+}
+/* ============================================================
+   ROOT RENDER + BOOT
+   ============================================================ */
+function viewBody(){
+  if(!state.setupDone || state.view==='setup') return viewSetup();
+  if(state.view==='track') return viewTrack();
+  return viewHome();
+}
+
+function render(){
+  const root = document.getElementById('wa-root');
+  const active = document.activeElement; const activeId = active && active.id;
+  const activeSel = (active && (active.tagName==='TEXTAREA'||active.tagName==='INPUT')) ? [active.selectionStart, active.selectionEnd] : null;
+
+  root.innerHTML = `
+  <div style="min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:28px 18px 60px;">
+    <div style="position:relative;width:1120px;max-width:100%;border:3px solid #1c2636;background:#080b11;box-shadow:0 0 0 6px #05070b,0 22px 60px rgba(0,0,0,.6);overflow:hidden;">
+      ${topBar()}
+      <main id="wa-content" style="position:relative;z-index:20;">
+        ${viewBody()}
+      </main>
+      ${footer()}
+    </div>
+  </div>`;
+
+  if(activeId){ const el=document.getElementById(activeId); if(el){ try{ el.focus(); if(activeSel && el.setSelectionRange) el.setSelectionRange(activeSel[0], activeSel[1]); }catch(e){} } }
+}
+
+function boot(){ load(); render(); }
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+
+})();
+</script>
+</body>
+</html>
