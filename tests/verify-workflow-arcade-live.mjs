@@ -26,6 +26,8 @@ const requiredHtml = [
   /WHAT YOU SHOULD SEE/,
   /IT WORKED/,
   /SOMETHING LOOKS OFF/,
+  /GOT IT/,
+  /WHAT THIS MEANS/,
   // chrome, the link back to the arcade, a11y, disclosure
   /workflow-arcade\.html/,
   /Skip to the steps/,

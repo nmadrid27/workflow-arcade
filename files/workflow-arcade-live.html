@@ -375,25 +375,31 @@ function viewTrack(){
     </div>`;
   }
 
+  const hasCmds = !!(st.commands && st.commands.length);
+
+  const expectLabel = hasCmds ? '✓ WHAT YOU SHOULD SEE' : 'WHAT THIS MEANS';
   const expectHtml=`<div style="border:3px solid #1f5a43;background:#0a1410;padding:13px 15px;margin-bottom:14px;">
-    <div style="font-family:'Press Start 2P';font-size:7px;color:#34d399;margin-bottom:8px;">✓ WHAT YOU SHOULD SEE</div>
+    <div style="font-family:'Press Start 2P';font-size:7px;color:#34d399;margin-bottom:8px;">${esc(expectLabel)}</div>
     <div style="font-size:18px;color:#cfe9df;line-height:1.32;">${esc(fill(st.expect))}</div>
   </div>`;
 
   const troubleOpen=!!state.trouble[key];
-  const troubleHtml=`<div style="margin-bottom:14px;">
+  const troubleHtml = st.trouble ? `<div style="margin-bottom:14px;">
     <button onclick="WA.toggleTrouble()" aria-expanded="${troubleOpen}" style="font-family:'Press Start 2P';font-size:8px;color:#fbbf24;background:#0b0f16;border:2px solid #fbbf24;padding:9px 11px;cursor:pointer;">${troubleOpen?'HIDE TROUBLESHOOTING':'SOMETHING LOOKS OFF'}</button>
     ${troubleOpen?`<div style="border:2px solid #5a4a1a;background:#15120a;padding:11px 13px;margin-top:9px;font-size:17px;color:#e7dca8;line-height:1.32;">${esc(fill(st.trouble))}</div>`:''}
-  </div>`;
+  </div>` : '';
+
+  const docHtml = st.doc ? `<a href="${esc(st.doc.url)}" target="_blank" rel="noopener" style="display:inline-block;font-family:'Press Start 2P';font-size:7px;color:#22d3ee;background:#0b0f16;border:2px solid #243043;padding:7px 9px;text-decoration:none;margin-bottom:14px;">↗ DOCS · ${esc(st.doc.label)}</a>` : '';
 
   const wherePath = st.where ? fill(st.where) : '';
   const whereHtml = wherePath ? `<div style="font-size:16px;color:#7c8696;margin:0 0 12px;">In: <span style="color:#34d399;">${esc(wherePath)}</span></div>` : '';
   const surface = surfaceOf(st);
   const whereChip = surface ? `<span style="font-family:'Press Start 2P';font-size:7px;color:#34d399;border:2px solid #1f5a43;background:#0a1410;padding:5px 7px;margin-left:auto;">${esc(surface)}</span>` : '';
 
+  const verb = hasCmds ? 'IT WORKED' : 'GOT IT';
   const nav=`<div style="display:flex;gap:12px;align-items:center;">
     <button onclick="WA.back()"${i===0?' disabled aria-disabled="true"':''} style="font-family:'Press Start 2P';font-size:9px;color:#8893a4;background:#0b0f16;border:3px solid #243043;padding:12px 16px;cursor:${i===0?'not-allowed':'pointer'};opacity:${i===0?'.5':'1'};">◂ BACK</button>
-    <button onclick="WA.confirmStep()" style="font-family:'Press Start 2P';font-size:10px;color:#05080d;background:#34d399;border:3px solid #05080d;padding:12px 18px;cursor:pointer;margin-left:auto;">${isLast?'IT WORKED · FINISH TRACK ✓':'IT WORKED · NEXT ▸'}</button>
+    <button onclick="WA.confirmStep()" style="font-family:'Press Start 2P';font-size:10px;color:#05080d;background:#34d399;border:3px solid #05080d;padding:12px 18px;cursor:pointer;margin-left:auto;">${isLast?verb+' · FINISH TRACK ✓':verb+' · NEXT ▸'}</button>
   </div>`;
 
   return `
@@ -415,6 +421,7 @@ function viewTrack(){
       ${cmdsHtml}
       ${expectHtml}
       ${troubleHtml}
+      ${docHtml}
       ${done?`<div style="font-size:15px;color:#34d399;margin-bottom:12px;">You marked this step done. Revisit any time.</div>`:''}
       ${nav}
     </div>
