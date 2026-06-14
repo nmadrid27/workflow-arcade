@@ -22,11 +22,11 @@ Then open `http://localhost:4173/files/workflow-arcade.html`. Opening `files/wor
 2. **Teach Claude How to Work With You**: a concise, testable collaboration profile.
 3. **Add ESF Companion**: the Cowork plugin or manual templates, your choice.
 4. **Complete Your First Small Project**: position, exploration, verification, disclosure.
-5. **Steer the Session**: permission prompts, Esc, plan mode, `/clear`.
+5. **Steer the Session**: read permission prompts, interrupt with Esc, use plan mode, and promote a repeated correction into `CLAUDE.md`.
 6. **Put the Project Under Version Control**: git basics, reading every diff before approving.
 7. **Recover When It Goes Wrong**: stop, inspect, revert, and keep the lesson.
 
-Along the way: simulated terminals that show state changing and never execute anything, practice pads with worked examples and honest structural answer checking, an exportable field guide, real artifact downloads built from your own writing, badges, and a completion certificate.
+Along the way: simulated terminals that never execute, with copyable command lines; practice pads with worked examples that fade as you climb, plus an honest structural check; a from-memory recall check at the end of each quest; a Steward Integrity meter, a horizontal overworld map, and behavior-based badges; an exportable field guide that feeds an ESF Defense Pack; a completion certificate; and optional ambient music, off by default. The seven quests are Stage A of a wider AI-workflow skill ladder.
 
 ## Development
 
