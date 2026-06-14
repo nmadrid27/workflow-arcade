@@ -53,6 +53,8 @@ const requiredHtml = [
   /AI-assisted collaboration/,
   /copyTerm/,
   /title="Badge case"/,
+  /workflow-arcade-live\.html/,
+  /DO IT FOR REAL/,
 ];
 
 for (const pattern of requiredHtml) {
