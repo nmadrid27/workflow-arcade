@@ -51,6 +51,7 @@ const requiredHtml = [
   /VT323/,
   // disclosure line
   /AI-assisted collaboration/,
+  /copyTerm/,
 ];
 
 for (const pattern of requiredHtml) {

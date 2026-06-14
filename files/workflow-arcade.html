@@ -384,6 +384,15 @@ function copyCode(){
   state.copiedKey=key; announce('Copied to clipboard.'); render();
   clearTimeout(copyCode._t); copyCode._t=setTimeout(()=>{ state.copiedKey=null; render(); },1200);
 }
+// a terminal line is a copyable command if it carries a shell or claude prompt
+function termIsCmd(t){ return /^\s*\$\s+\S/.test(t) || /^[a-z]+ > \S/i.test(t); }
+function termCmd(t){ return t.replace(/^\s*\$\s+/, '').replace(/^[a-z]+ > /i, ''); }
+function copyTerm(i){
+  const st=curStep(); if(!st||!st.term||!st.term[i]) return;
+  try{ navigator.clipboard.writeText(termCmd(st.term[i][0])); }catch(e){}
+  state.copiedKey='term:'+i; announce('Command copied to clipboard.'); render();
+  clearTimeout(copyTerm._t); copyTerm._t=setTimeout(()=>{ state.copiedKey=null; render(); },1200);
+}
 function downloadCert(){
   const name=(state.certName||'PLAYER ONE').toUpperCase();
   const cv=document.createElement('canvas'); cv.width=1000; cv.height=700; const x=cv.getContext('2d');
@@ -436,7 +445,7 @@ const sa = (obj)=> ' style="'+esc(css(obj))+'"';   // style attribute from objec
 window.WA = {
   goHome, openLog, openBadges, openCert, openGuide, toggleAskPixel, toggleWorld, openQuest, resume,
   next, back, clearQuest, onPad, toggleExample, toggleHint, onReflect, doCheck, chooseBranch, onCertName,
-  saveStep, removeGuide, onRecall, setConf, revealRecall, retryRecall, scoreRecall, exportGuide, copyCode,
+  saveStep, removeGuide, onRecall, setConf, revealRecall, retryRecall, scoreRecall, exportGuide, copyCode, copyTerm,
   downloadCert, reset, toggleMusic, setMusicVol
 };
 
@@ -666,7 +675,11 @@ function viewQuest(){
     termHtml = `<div style="border:3px solid #2b2b3a;background:#07060d;margin-bottom:6px;">
       <div style="display:flex;align-items:center;gap:6px;padding:7px 10px;border-bottom:2px solid #1b1830;"><span aria-hidden="true" style="width:11px;height:11px;background:#ff2d78;"></span><span aria-hidden="true" style="width:11px;height:11px;background:#fbbf24;"></span><span aria-hidden="true" style="width:11px;height:11px;background:#34d399;"></span><span style="margin-left:8px;font-family:'Press Start 2P';font-size:7px;color:#6c6c8c;">SIMULATED · NEVER EXECUTES</span></div>
       <div style="padding:12px 14px;font-family:'VT323';font-size:20px;line-height:1.4;">
-        ${termLines.map(tl=>`<div style="color:${tl.c};">${esc(tl.t)}</div>`).join('')}
+        ${termLines.map((tl,i)=>{
+          if(!termIsCmd(tl.t)) return `<div style="color:${tl.c};">${esc(tl.t)}</div>`;
+          const copied = state.copiedKey===('term:'+i);
+          return `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;color:${tl.c};"><span>${esc(tl.t)}</span><button onclick="WA.copyTerm(${i})" aria-label="Copy command to clipboard" style="font-family:'Press Start 2P';font-size:6px;color:#22d3ee;background:#0c0b16;border:2px solid #2b2b3a;padding:3px 6px;cursor:pointer;flex:none;">${copied?'COPIED ✓':'⧉ COPY'}</button></div>`;
+        }).join('')}
       </div>
     </div>`;
   }
