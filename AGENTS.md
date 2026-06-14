@@ -4,10 +4,14 @@ A public, pixel-art learning app that teaches first-time macOS users a seven-que
 
 The current app is a vanilla-JS port of the "Neon Grid" v3 design build. The seven quests are Stage A of the AI-workflow skill ladder.
 
+A second public file, `files/workflow-arcade-live.html`, is the Real-Machine Companion: a separate self-contained offline page that takes the learner's project name and folder, then guides them through doing the same seven quests for real on their own macOS machine. It is guided only (it never runs commands or writes files), personalizes every command through a `fill()` token substituter, writes its own `wa-arcade-live-v1` localStorage key, and reads (never mutates) the arcade's `wa-arcade-proto-v1` key to flag quests already played in the sim. Its content lives in a `STAGES` data table the shell renders generically, so Stage B and Stage C can be added later as data. The arcade links to it from the home hero ("DO IT FOR REAL").
+
 ## Commands
 
 - **Serve:** `python3 -m http.server 4173`, then open `http://localhost:4173/files/workflow-arcade.html`
 - **Contract test:** `node tests/verify-workflow-arcade.mjs` (Node standard library only; nothing to install)
+- **Serve the companion:** same server, open `http://localhost:4173/files/workflow-arcade-live.html`
+- **Companion contract test:** `node tests/verify-workflow-arcade-live.mjs`
 
 There is no package.json, bundler, linter, or build step. Editing is direct file editing.
 

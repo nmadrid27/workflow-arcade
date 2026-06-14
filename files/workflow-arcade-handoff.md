@@ -52,6 +52,7 @@ PIXEL does not call a hosted model. Its status explicitly identifies it as an of
 ## Project Files
 
 - `files/workflow-arcade.html`: the complete application (a single self-contained vanilla-JS file, ~1158 lines).
+- `files/workflow-arcade-live.html`: the Real-Machine Companion. A separate offline page that personalizes real commands from the learner's project name and folder and guides them through the seven quests on their own Mac. Guided only: never executes anything, never writes files. Validated by `tests/verify-workflow-arcade-live.mjs`.
 - `files/workflow-arcade-handoff.md`: this continuation guide.
 - `tests/verify-workflow-arcade.mjs`: the static completion contract.
 
