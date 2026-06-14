@@ -362,8 +362,9 @@ function viewTrack(){
 
   const progress=t.steps.map((_,j)=>{ const stl={ flex:1, height:'8px', background: state.done[stepKey(t,j)]?'#34d399':(j===i?'#22d3ee':'#16202c') }; return `<span aria-hidden="true"${sa(stl)}></span>`; }).join('');
 
+  const hasCmds = !!(st.commands && st.commands.length);
   let cmdsHtml='';
-  if(st.commands && st.commands.length){
+  if(hasCmds){
     const rows=st.commands.map((c,ci)=>{
       const shown=(c.prompt?c.prompt+' ':'')+fill(c.cmd);
       const copied=state.copiedKey===('cmd:'+ci);
@@ -374,8 +375,6 @@ function viewTrack(){
       <div style="padding:12px 14px;font-family:'VT323';font-size:20px;line-height:1.5;">${rows}</div>
     </div>`;
   }
-
-  const hasCmds = !!(st.commands && st.commands.length);
 
   const expectLabel = hasCmds ? '✓ WHAT YOU SHOULD SEE' : 'WHAT THIS MEANS';
   const expectHtml=`<div style="border:3px solid #1f5a43;background:#0a1410;padding:13px 15px;margin-bottom:14px;">
