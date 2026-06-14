@@ -476,14 +476,14 @@ function topBar(){
         <span style="font-family:'Press Start 2P';font-size:8px;color:#8a8aa2;">${cleared} / 7</span>
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
-        <button onclick="WA.toggleMusic()" aria-label="MUSIC: ${state.musicOn?'ON':'OFF'}" aria-pressed="${state.musicOn}" style="font-family:'Press Start 2P';font-size:8px;height:30px;padding:0 8px;display:grid;place-items:center;cursor:pointer;color:#22d3ee;background:#11101e;border:3px solid #2b2b3a;">MUSIC: ${state.musicOn?'ON':'OFF'} <span aria-hidden="true">${musicGlyph}</span></button>
-        <input type="range" min="0" max="100" step="5" value="${volPct}" oninput="WA.setMusicVol(this.value/100)" aria-label="Music volume" style="width:72px;accent-color:#ff2d78;cursor:pointer;" />
+        <button onclick="WA.toggleMusic()" title="Toggle ambient music" aria-label="MUSIC: ${state.musicOn?'ON':'OFF'}" aria-pressed="${state.musicOn}" style="font-family:'Press Start 2P';font-size:8px;height:30px;padding:0 8px;display:grid;place-items:center;cursor:pointer;color:#22d3ee;background:#11101e;border:3px solid #2b2b3a;">MUSIC: ${state.musicOn?'ON':'OFF'} <span aria-hidden="true">${musicGlyph}</span></button>
+        <input type="range" min="0" max="100" step="5" value="${volPct}" oninput="WA.setMusicVol(this.value/100)" title="Music volume" aria-label="Music volume" style="width:72px;accent-color:#ff2d78;cursor:pointer;" />
       </div>
       <div style="display:flex;gap:6px;margin-left:2px;">
-        <button onclick="WA.goHome()" aria-label="Home"${sa(navBtn(state.view==='home'))}><span aria-hidden="true">⌂</span></button>
-        <button onclick="WA.openLog()" aria-label="Quest log"${sa(navBtn(state.view==='log'))}><span aria-hidden="true">▤</span></button>
-        <button onclick="WA.openGuide()" aria-label="Field guide"${sa(navBtn(state.view==='guide'))}><span aria-hidden="true">✎</span></button>
-        <button onclick="WA.openBadges()" aria-label="Badge case"${sa(navBtn(state.view==='badges'))}><span aria-hidden="true">★</span></button>
+        <button onclick="WA.goHome()" title="Home" aria-label="Home"${sa(navBtn(state.view==='home'))}><span aria-hidden="true">⌂</span></button>
+        <button onclick="WA.openLog()" title="Quest log" aria-label="Quest log"${sa(navBtn(state.view==='log'))}><span aria-hidden="true">▤</span></button>
+        <button onclick="WA.openGuide()" title="Field guide" aria-label="Field guide"${sa(navBtn(state.view==='guide'))}><span aria-hidden="true">✎</span></button>
+        <button onclick="WA.openBadges()" title="Badge case" aria-label="Badge case"${sa(navBtn(state.view==='badges'))}><span aria-hidden="true">★</span></button>
       </div>
     </div>
   </div>`;

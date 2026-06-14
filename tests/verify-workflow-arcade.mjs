@@ -52,6 +52,7 @@ const requiredHtml = [
   // disclosure line
   /AI-assisted collaboration/,
   /copyTerm/,
+  /title="Badge case"/,
 ];
 
 for (const pattern of requiredHtml) {
