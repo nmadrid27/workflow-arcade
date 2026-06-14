@@ -16,6 +16,14 @@ python3 -m http.server 4173
 
 Then open `http://localhost:4173/files/workflow-arcade.html`. Opening `files/workflow-arcade.html` directly in a browser also works.
 
+### Do it for real
+
+A companion app turns the quests into real steps on the player's own Mac. Enter a project name and a folder, and it fills in the exact personalized commands and what to expect at each step. It is guided only: it never runs anything and never writes to your files. Reach it from the arcade's **DO IT FOR REAL** button, or directly:
+
+**Live: [the do-it-for-real companion](https://nmadrid27.github.io/workflow-arcade/files/workflow-arcade-live.html)**
+
+Locally, open `http://localhost:4173/files/workflow-arcade-live.html`.
+
 ## The quests
 
 1. **Start Your First Claude Code Project**: folder, install, `/init`, `CLAUDE.md`.
@@ -32,9 +40,10 @@ Along the way: simulated terminals that never execute, with copyable command lin
 
 ```bash
 node tests/verify-workflow-arcade.mjs
+node tests/verify-workflow-arcade-live.mjs
 ```
 
-The contract test (Node standard library only) is the completion gate: it pins required and forbidden strings, including the rule that no hosted-model endpoint ever appears in the app. Project conventions live in `AGENTS.md`.
+The contract tests (Node standard library only) are the completion gate: they pin required and forbidden strings, including the rule that no hosted-model endpoint ever appears in either app. Project conventions live in `AGENTS.md`.
 
 ## License
 
