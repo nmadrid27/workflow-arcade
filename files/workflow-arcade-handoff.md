@@ -103,7 +103,7 @@ All content lives in `const` data tables at the top of the script, ported verbat
 A step supports:
 
 ```js
-{ h, b, code, term, scene, where, why, action, pad }
+{ h, b, code, term, scene, where, why, hint, action, pad }
 ```
 
 - `h`: action heading.
@@ -113,6 +113,7 @@ A step supports:
 - `scene`: optional PROJECT STATE tree, an array of strings rendered above the terminal. Lines starting with `*` render amber as changed state.
 - `where`: optional surface key (`terminal`, `claude`, `cowork`, `desktop`, `browser`) rendered as a step chip.
 - `why`: optional flag that adds the WHY THIS WORKS reflection field on the step.
+- `hint`: the per-step hint text PIXEL shows when the learner taps HINT. Present on nearly every step; it powers the hint-only PIXEL rail.
 - `action`: optional badge id awarded when the learner advances past the step.
 - `pad`: optional practice-pad config, `{ ph, ex, badge, awardXp, check[], file? }`, where each `check` entry is `{ any:[terms], label }` for the keyword-presence structure check, and `file` is `{ name, tree[] }` for the ON YOUR MACHINE panel.
 
