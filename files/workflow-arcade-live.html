@@ -225,8 +225,8 @@ function surfaceOf(st){
    ============================================================ */
 function goHome(){ state.view='home'; render(); }
 function editSetup(){ state.view='setup'; render(); }
-function onProject(e){ state.project=e.target.value; }
-function onProjectsDir(e){ state.projectsDir=e.target.value; }
+function onProject(e){ state.project=e.target.value; render(); }
+function onProjectsDir(e){ state.projectsDir=e.target.value; render(); }
 function saveSetup(){
   if(!state.project.trim()) state.project='my-project';
   if(!state.projectsDir.trim()) state.projectsDir='~/projects';
@@ -235,13 +235,14 @@ function saveSetup(){
 }
 function openTrack(id){
   const idx=idxOfTrack(id); if(idx<0 || !trackUnlocked(idx)) return;
-  state.view='track'; state.trackId=id; state.step=state.stepAt[id]||0; state.trouble={}; render();
+  state.view='track'; state.trackId=id; state.step=state.stepAt[id]||0; state.trouble={}; state.copiedKey=null; render();
 }
 function resume(){ const t=stageA().tracks.find(tr=>!trackComplete(tr)); if(t) openTrack(t.id); else { state.view='home'; render(); } }
-function back(){ if(state.step>0){ state.step--; state.trouble={}; render(); } }
+function back(){ if(state.step>0){ state.step--; state.trouble={}; state.copiedKey=null; render(); } }
 function confirmStep(){
   const t=curTrack(); if(!t) return; const k=stepKey(t,state.step);
   state.done[k]=true; const ns=Math.min(state.step+1, t.steps.length-1); state.stepAt[t.id]=ns; persist();
+  state.copiedKey=null;
   if(state.step < t.steps.length-1){ state.step=ns; state.trouble={}; announce('Step done.'); render(); }
   else { announce('Track complete: '+t.title); state.view='home'; render(); }
 }
