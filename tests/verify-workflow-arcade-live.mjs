@@ -38,6 +38,9 @@ const requiredHtml = [
   /Automate:/,
   /Coordinate:/,
   /code\.claude\.com\/docs/,
+  // resume affordance (wired to the existing resume() action)
+  /CONTINUE/,
+  /onclick="WA\.resume\(\)"/,
   // chrome, the link back to the arcade, a11y, disclosure
   /workflow-arcade\.html/,
   /Skip to the steps/,
