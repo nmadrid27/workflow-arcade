@@ -152,6 +152,59 @@ const STAGES = [
           expect:'CLAUDE.md now has one concrete rule that would have prevented this, for example "Commit a working state before any large edit". Save it.',
           trouble:'A mistake becomes useful the moment it turns into a rule. Keep it to one concrete line.' },
       ] },
+    ] },
+  { id:'b', title:'STAGE B · FLUENCY', intent:'Make the tool reusable and connect it to your world. Optional, for when you want more.',
+    tracks:[
+    { id:'b1', title:'Make the tool reusable', intent:'Set up a personal profile and save a task you repeat as a command.',
+      steps:[
+        { id:'b1s1', action:'Set up a personal profile that applies to every project', where:'~/.claude',
+          commands:[{cmd:'mkdir -p ~/.claude',prompt:'$'},{cmd:'open -e ~/.claude/CLAUDE.md',prompt:'$'}],
+          expect:'A personal CLAUDE.md opens in TextEdit. Add one or two preferences you want in every project, for example "Lead with the answer", and save. A project CLAUDE.md still wins for project-specific rules.',
+          trouble:'This file is separate from a project CLAUDE.md. Personal rules live here in ~/.claude; project rules stay in the project folder.',
+          doc:{ label:'Memory and CLAUDE.md', url:'https://code.claude.com/docs/en/memory' } },
+        { id:'b1s2', action:'Name one task you do over and over', where:'', commands:[],
+          expect:'You can name a repeatable task, for example "summarize a document in my voice" or "check a draft against my rubric". That is what you will turn into a command.',
+          trouble:'Pick something specific and repeatable. A one-off does not need a command.' },
+        { id:'b1s3', action:'Save that task as a reusable command', where:'{projectsDir}/{project}',
+          commands:[{cmd:'mkdir -p {projectsDir}/{project}/.claude/commands',prompt:'$'},{cmd:'open -e {projectsDir}/{project}/.claude/commands/mytask.md',prompt:'$'}],
+          expect:'A new command file opens. Write the instruction you want to reuse, in plain language, then save. The file name becomes the command name.',
+          trouble:'Keep the file in .claude/commands and give it a short name with no spaces, for example mytask.md.',
+          doc:{ label:'Slash commands and skills', url:'https://code.claude.com/docs/en/slash-commands' } },
+        { id:'b1s4', action:'Invoke your command by name', where:'{projectsDir}/{project}',
+          commands:[{cmd:'/mytask',prompt:'claude >'}],
+          expect:'Claude runs the instruction you saved. You now reuse that task by name instead of retyping it.',
+          trouble:'If /mytask is not found, confirm the file is named mytask.md inside .claude/commands in this project.' },
+      ] },
+    { id:'b2', title:'Connect the tool to your notes', intent:'Give Claude permission to read one source you already use.',
+      steps:[
+        { id:'b2s1', action:'Understand what connecting a source does', where:'', commands:[],
+          expect:'An MCP connection lets Claude read a system you choose, like a folder of notes or documents. You grant the access, you can remove it, and it only sees what you connect.',
+          trouble:'Think of it as handing Claude a library card for one shelf, not your whole house.',
+          doc:{ label:'What MCP is', url:'https://code.claude.com/docs/en/mcp' } },
+        { id:'b2s2', action:'Add a connection to one local notes or documents folder, using the current steps on the linked docs', where:'{projectsDir}/{project}', commands:[],
+          expect:'When it succeeds, Claude lists your notes folder as a connected source, and you can use it in the next step.',
+          trouble:'The connection is local and reversible; you can list and remove connections anytime. The exact command changes often, so follow the docs link rather than memorizing it.',
+          doc:{ label:'Add a local MCP connection', url:'https://code.claude.com/docs/en/mcp' } },
+        { id:'b2s3', action:'Use your connected notes in a real task', where:'{projectsDir}/{project}',
+          commands:[{cmd:'Using my notes, summarize what I have written about X.',prompt:'claude >'}],
+          expect:'Claude reads from the folder you connected and answers from your own material, not generic text.',
+          trouble:'If it does not use your notes, confirm the connection from the previous step succeeded and that you pointed it at the right folder.' },
+      ] },
+    ] },
+  { id:'c', title:'STAGE C · ORCHESTRATION', intent:'See what is beyond. For people who want to build with AI; most learners never need this.',
+    tracks:[
+    { id:'c1', title:"See what's beyond", intent:'A map of the three orchestration moves, and where to learn each for real.',
+      steps:[
+        { id:'c1s1', action:'Delegate: hand a sub-task to a focused worker', where:'', commands:[],
+          expect:'A subagent takes a self-contained sub-task, a research pass or a review, in its own context and reports back; then you judge its output. This is intent and verification again, deepened: you write the brief, then you check the result.',
+          doc:{ label:'Subagents', url:'https://code.claude.com/docs/en/sub-agents' } },
+        { id:'c1s2', action:'Automate: run a deterministic action without asking each time', where:'', commands:[],
+          expect:'A hook runs a fixed action at a lifecycle event, and a non-interactive (headless) run lets you script a job. This is developer-leaning and narrow; most people never need it.',
+          doc:{ label:'Hooks', url:'https://code.claude.com/docs/en/hooks-guide' } },
+        { id:'c1s3', action:'Coordinate: run a multi-step or parallel workflow', where:'', commands:[],
+          expect:'Coordinating runs many steps, or many items in parallel, as one workflow. It is the most advanced rung and the furthest from one person at a terminal. When you need it, the docs are the place to start.',
+          doc:{ label:'Common workflows', url:'https://code.claude.com/docs/en/common-workflows' } },
+      ] },
     ] }
 ];
 /* ============================================================
@@ -205,13 +258,29 @@ function persist(){
 function announce(msg){ const el=document.getElementById('wa-status'); if(!el) return; el.textContent=''; setTimeout(()=>{ el.textContent=msg; },10); }
 function readArcade(){ try{ const raw=localStorage.getItem(ARCADE_KEY); if(!raw) return {}; const p=JSON.parse(raw); return p.cleared||{}; }catch(e){ return {}; } }
 
-function stageA(){ return STAGES[0]; }
-function trackById(id){ return stageA().tracks.find(t=>t.id===id); }
-function idxOfTrack(id){ return stageA().tracks.findIndex(t=>t.id===id); }
+function allTracks(){ const out=[]; STAGES.forEach(s=>{ s.tracks.forEach(t=>out.push(t)); }); return out; }
+function trackById(id){ return allTracks().find(t=>t.id===id); }
+function stageOfTrack(id){ return STAGES.find(s=>s.tracks.some(t=>t.id===id)); }
+function stageTag(s){ return s.title.split(' · ')[0]; }
+function trackNum(t){ const s=stageOfTrack(t.id); return s ? s.tracks.indexOf(t)+1 : 1; }
 function stepKey(t,i){ return t.id+':'+i; }
 function trackDoneCount(t){ return t.steps.filter((_,i)=>state.done[stepKey(t,i)]).length; }
 function trackComplete(t){ return t.steps.length>0 && trackDoneCount(t)===t.steps.length; }
-function trackUnlocked(idx){ return idx===0 || trackComplete(stageA().tracks[idx-1]); }
+function stageComplete(s){ return s.tracks.length>0 && s.tracks.every(trackComplete); }
+function stageUnlocked(s){ const i=STAGES.indexOf(s); return i===0 || stageComplete(STAGES[i-1]); }
+function trackUnlocked(t){ const s=stageOfTrack(t.id); if(!s || !stageUnlocked(s)) return false; const ti=s.tracks.indexOf(t); return ti===0 || trackComplete(s.tracks[ti-1]); }
+function activeStage(){ if(state.trackId){ const s=stageOfTrack(state.trackId); if(s) return s; } return STAGES.find(s=>stageUnlocked(s) && !stageComplete(s)) || STAGES[STAGES.length-1]; }
+function offRampNote(s){
+  const map = {
+    a:{ tag:'OFF-RAMP A · THIS IS A REAL FINISH', body:'You can stop here. Stage A is a complete, useful skill set. Stages B and C are optional, for when you want more.' },
+    b:{ tag:'OFF-RAMP B · YOU CAN CUSTOMIZE THE TOOL', body:'You can now shape the tool to your own practice. Stage C is specialist and optional; most people never need it.' }
+  };
+  const o=map[s.id]; if(!o) return '';
+  return `<div style="border:3px solid #1f5a43;background:#0a1410;padding:16px 18px;margin:14px 0;">
+    <div style="font-family:'Press Start 2P';font-size:9px;color:#34d399;margin-bottom:8px;">${esc(o.tag)}</div>
+    <div style="font-size:17px;color:#cfe9df;line-height:1.32;">${esc(o.body)}</div>
+  </div>`;
+}
 function curTrack(){ return trackById(state.trackId); }
 function curStep(){ const t=curTrack(); return t ? t.steps[state.step] : null; }
 function surfaceOf(st){
@@ -234,10 +303,10 @@ function saveSetup(){
   state.view='home'; render();
 }
 function openTrack(id){
-  const idx=idxOfTrack(id); if(idx<0 || !trackUnlocked(idx)) return;
+  const t=trackById(id); if(!t || !trackUnlocked(t)) return;
   state.view='track'; state.trackId=id; state.step=state.stepAt[id]||0; state.trouble={}; state.copiedKey=null; render();
 }
-function resume(){ const t=stageA().tracks.find(tr=>!trackComplete(tr)); if(t) openTrack(t.id); else { state.view='home'; render(); } }
+function resume(){ const t=allTracks().find(tr=> trackUnlocked(tr) && !trackComplete(tr)); if(t) openTrack(t.id); else { state.view='home'; render(); } }
 function back(){ if(state.step>0){ state.step--; state.trouble={}; state.copiedKey=null; render(); } }
 function confirmStep(){
   const t=curTrack(); if(!t) return; const k=stepKey(t,state.step);
@@ -266,7 +335,7 @@ window.WA = { goHome, editSetup, onProject, onProjectsDir, saveSetup, openTrack,
    RENDER: chrome
    ============================================================ */
 function topBar(){
-  const st=stageA(); const total=st.tracks.length; const done=st.tracks.filter(trackComplete).length; const pct=Math.round(done/total*100);
+  const st=activeStage(); const total=st.tracks.length; const done=st.tracks.filter(trackComplete).length; const pct=total?Math.round(done/total*100):0;
   const fillStyle={ position:'absolute', inset:0, width:pct+'%', background:'#22d3ee' };
   return `
   <div style="display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:3px solid #05080d;background:#0b0f16;position:relative;z-index:40;">
@@ -276,7 +345,7 @@ function topBar(){
     </button>
     <div style="margin-left:auto;display:flex;align-items:center;gap:14px;">
       <div style="display:flex;align-items:center;gap:8px;">
-        <span style="font-family:'Press Start 2P';font-size:8px;color:#34d399;">REAL PROGRESS</span>
+        <span style="font-family:'Press Start 2P';font-size:8px;color:#34d399;">${esc(stageTag(st))}</span>
         <div style="width:120px;height:14px;background:#05080d;border:3px solid #243043;position:relative;"><div${sa(fillStyle)}></div></div>
         <span style="font-family:'Press Start 2P';font-size:8px;color:#8893a4;">${done} / ${total}</span>
       </div>
@@ -319,51 +388,67 @@ function viewSetup(){
     <button onclick="WA.saveSetup()" style="font-family:'Press Start 2P';font-size:11px;color:#05080d;background:#22d3ee;border:3px solid #05080d;padding:14px 18px;cursor:pointer;">START FOR REAL ▸</button>
   </div>`;
 }
+function trackRow(t, arcade){
+  const dc=trackDoneCount(t); const complete=trackComplete(t); const unl=trackUnlocked(t);
+  const n=trackNum(t);
+  const arcadeCleared = t.quest && arcade[t.quest];
+  let statusLabel, accent;
+  if(complete){ statusLabel='DONE ✓'; accent='#34d399'; }
+  else if(!unl){ statusLabel='LOCKED'; accent='#3a4759'; }
+  else if(dc>0){ statusLabel='RESUME ▸'; accent='#22d3ee'; }
+  else { statusLabel='START ▸'; accent='#22d3ee'; }
+  const readyChip = (arcadeCleared && !complete && unl) ? `<span style="font-family:'Press Start 2P';font-size:6px;color:#34d399;border:2px solid #34d399;padding:4px 6px;white-space:nowrap;">PLAYED ✓ DO IT LIVE</span>` : '';
+  const rowStyle={ display:'flex', alignItems:'center', gap:'14px', width:'100%', textAlign:'left', color:'inherit', border:'3px solid '+(complete?'#1f5a43':(unl?'#243043':'#1a2230')), background:'#0b0f16', padding:'14px 16px', cursor: unl?'pointer':'not-allowed', opacity: unl?'1':'.6' };
+  const numStyle={ width:'34px', height:'34px', flex:'none', display:'grid', placeItems:'center', fontFamily:"'Press Start 2P'", fontSize:'11px', border:'3px solid #05080d', background: complete?'#34d399':'#16202c', color: complete?'#05080d':accent };
+  const statusWord = complete?'done':(unl?(dc>0?'resume':'start'):'locked');
+  return `<button onclick="WA.openTrack('${t.id}')"${unl?'':' aria-disabled="true"'} aria-label="Track ${n}, ${esc(t.title)}, ${statusWord}"${sa(rowStyle)}>
+    <span aria-hidden="true"${sa(numStyle)}>${complete?'✓':n}</span>
+    <span style="flex:1;min-width:0;">
+      <span style="font-size:19px;color:#e8edf2;">${esc(t.title)}</span>
+      <span style="display:block;font-size:15px;color:#8893a4;margin-top:3px;">${esc(t.intent)}</span>
+    </span>
+    ${readyChip}
+    <span style="font-family:'Press Start 2P';font-size:7px;color:${accent};white-space:nowrap;">${dc}/${t.steps.length} · ${esc(statusLabel)}</span>
+  </button>`;
+}
 function viewHome(){
-  const st=stageA(); const arcade=readArcade();
-  const tracksHtml = st.tracks.map((t,idx)=>{
-    const dc=trackDoneCount(t); const complete=trackComplete(t); const unl=trackUnlocked(idx);
-    const arcadeCleared = t.quest && arcade[t.quest];
-    let statusLabel, accent;
-    if(complete){ statusLabel='DONE ✓'; accent='#34d399'; }
-    else if(!unl){ statusLabel='LOCKED'; accent='#3a4759'; }
-    else if(dc>0){ statusLabel='RESUME ▸'; accent='#22d3ee'; }
-    else { statusLabel='START ▸'; accent='#22d3ee'; }
-    const readyChip = (arcadeCleared && !complete && unl) ? `<span style="font-family:'Press Start 2P';font-size:6px;color:#34d399;border:2px solid #34d399;padding:4px 6px;white-space:nowrap;">PLAYED ✓ DO IT LIVE</span>` : '';
-    const rowStyle={ display:'flex', alignItems:'center', gap:'14px', width:'100%', textAlign:'left', color:'inherit', border:'3px solid '+(complete?'#1f5a43':(unl?'#243043':'#1a2230')), background:'#0b0f16', padding:'14px 16px', cursor: unl?'pointer':'not-allowed', opacity: unl?'1':'.6' };
-    const numStyle={ width:'34px', height:'34px', flex:'none', display:'grid', placeItems:'center', fontFamily:"'Press Start 2P'", fontSize:'11px', border:'3px solid #05080d', background: complete?'#34d399':'#16202c', color: complete?'#05080d':accent };
-    const statusWord = complete?'done':(unl?(dc>0?'resume':'start'):'locked');
-    return `<button onclick="WA.openTrack('${t.id}')"${unl?'':' aria-disabled="true"'} aria-label="Track ${idx+1}, ${esc(t.title)}, ${statusWord}"${sa(rowStyle)}>
-      <span aria-hidden="true"${sa(numStyle)}>${complete?'✓':(idx+1)}</span>
-      <span style="flex:1;min-width:0;">
-        <span style="font-size:19px;color:#e8edf2;">${esc(t.title)}</span>
-        <span style="display:block;font-size:15px;color:#8893a4;margin-top:3px;">${esc(t.intent)}</span>
-      </span>
-      ${readyChip}
-      <span style="font-family:'Press Start 2P';font-size:7px;color:${accent};white-space:nowrap;">${dc}/${t.steps.length} · ${esc(statusLabel)}</span>
-    </button>`;
+  const arcade=readArcade();
+  const sectionsHtml = STAGES.map((s,si)=>{
+    const unlocked=stageUnlocked(s); const total=s.tracks.length; const done=s.tracks.filter(trackComplete).length;
+    const header=`<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
+      <span style="font-family:'Press Start 2P';font-size:11px;color:#e8edf2;">${esc(s.title)}</span>
+      <span style="font-family:'Press Start 2P';font-size:7px;color:#8893a4;">${done}/${total}</span>
+    </div>
+    <p style="font-size:16px;color:#8893a4;line-height:1.35;margin:0 0 12px;max-width:740px;">${esc(s.intent)}</p>`;
+    let body;
+    if(!unlocked){
+      const prev=STAGES[si-1];
+      body=`<div style="border:3px solid #1a2230;background:#0b0f16;padding:16px;font-size:16px;color:#7c8696;">Finish ${esc(stageTag(prev))} to unlock ${esc(stageTag(s))}.</div>`;
+    } else {
+      body=`<div style="display:flex;flex-direction:column;gap:10px;">${s.tracks.map(t=>trackRow(t,arcade)).join('')}</div>`;
+    }
+    const offramp = (stageComplete(s) && si<STAGES.length-1) ? offRampNote(s) : '';
+    return `<section style="margin-bottom:22px;">${header}${body}</section>${offramp}`;
   }).join('');
-  const total=st.tracks.length; const done=st.tracks.filter(trackComplete).length;
   return `
   <div style="padding:26px 26px 30px;">
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;flex-wrap:wrap;">
-      <span style="font-family:'Press Start 2P';font-size:11px;color:#e8edf2;">${esc(st.title)}</span>
-      <span style="font-size:16px;color:#8893a4;">${done} of ${total} tracks done for real</span>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
+      <span style="font-size:16px;color:#8893a4;">Working in: <span style="color:#34d399;">${esc(fill('{projectsDir}/{project}'))}</span></span>
       <button onclick="WA.editSetup()" style="margin-left:auto;font-family:'Press Start 2P';font-size:7px;color:#22d3ee;background:#0b0f16;border:2px solid #22d3ee;padding:7px 9px;cursor:pointer;">✎ EDIT SETUP</button>
     </div>
-    <p style="font-size:18px;color:#aab4c2;line-height:1.35;margin:0 0 18px;max-width:740px;">${esc(st.intent)} Working in: <span style="color:#34d399;">${esc(fill('{projectsDir}/{project}'))}</span></p>
-    <div style="display:flex;flex-direction:column;gap:10px;">${tracksHtml}</div>
+    ${sectionsHtml}
   </div>`;
 }
 function viewTrack(){
   const t=curTrack(); if(!t) return viewHome();
   const i=Math.min(state.step, t.steps.length-1); const st=t.steps[i]; const key=stepKey(t,i);
-  const isLast=i===t.steps.length-1; const done=!!state.done[key]; const idx=idxOfTrack(t.id);
+  const isLast=i===t.steps.length-1; const done=!!state.done[key];
 
   const progress=t.steps.map((_,j)=>{ const stl={ flex:1, height:'8px', background: state.done[stepKey(t,j)]?'#34d399':(j===i?'#22d3ee':'#16202c') }; return `<span aria-hidden="true"${sa(stl)}></span>`; }).join('');
 
+  const hasCmds = !!(st.commands && st.commands.length);
   let cmdsHtml='';
-  if(st.commands && st.commands.length){
+  if(hasCmds){
     const rows=st.commands.map((c,ci)=>{
       const shown=(c.prompt?c.prompt+' ':'')+fill(c.cmd);
       const copied=state.copiedKey===('cmd:'+ci);
@@ -375,31 +460,35 @@ function viewTrack(){
     </div>`;
   }
 
+  const expectLabel = hasCmds ? '✓ WHAT YOU SHOULD SEE' : 'WHAT THIS MEANS';
   const expectHtml=`<div style="border:3px solid #1f5a43;background:#0a1410;padding:13px 15px;margin-bottom:14px;">
-    <div style="font-family:'Press Start 2P';font-size:7px;color:#34d399;margin-bottom:8px;">✓ WHAT YOU SHOULD SEE</div>
+    <div style="font-family:'Press Start 2P';font-size:7px;color:#34d399;margin-bottom:8px;">${esc(expectLabel)}</div>
     <div style="font-size:18px;color:#cfe9df;line-height:1.32;">${esc(fill(st.expect))}</div>
   </div>`;
 
   const troubleOpen=!!state.trouble[key];
-  const troubleHtml=`<div style="margin-bottom:14px;">
+  const troubleHtml = st.trouble ? `<div style="margin-bottom:14px;">
     <button onclick="WA.toggleTrouble()" aria-expanded="${troubleOpen}" style="font-family:'Press Start 2P';font-size:8px;color:#fbbf24;background:#0b0f16;border:2px solid #fbbf24;padding:9px 11px;cursor:pointer;">${troubleOpen?'HIDE TROUBLESHOOTING':'SOMETHING LOOKS OFF'}</button>
     ${troubleOpen?`<div style="border:2px solid #5a4a1a;background:#15120a;padding:11px 13px;margin-top:9px;font-size:17px;color:#e7dca8;line-height:1.32;">${esc(fill(st.trouble))}</div>`:''}
-  </div>`;
+  </div>` : '';
+
+  const docHtml = st.doc ? `<a href="${esc(st.doc.url)}" target="_blank" rel="noopener" style="display:inline-block;font-family:'Press Start 2P';font-size:7px;color:#22d3ee;background:#0b0f16;border:2px solid #243043;padding:7px 9px;text-decoration:none;margin-bottom:14px;">↗ DOCS · ${esc(st.doc.label)}</a>` : '';
 
   const wherePath = st.where ? fill(st.where) : '';
   const whereHtml = wherePath ? `<div style="font-size:16px;color:#7c8696;margin:0 0 12px;">In: <span style="color:#34d399;">${esc(wherePath)}</span></div>` : '';
   const surface = surfaceOf(st);
   const whereChip = surface ? `<span style="font-family:'Press Start 2P';font-size:7px;color:#34d399;border:2px solid #1f5a43;background:#0a1410;padding:5px 7px;margin-left:auto;">${esc(surface)}</span>` : '';
 
+  const verb = hasCmds ? 'IT WORKED' : 'GOT IT';
   const nav=`<div style="display:flex;gap:12px;align-items:center;">
     <button onclick="WA.back()"${i===0?' disabled aria-disabled="true"':''} style="font-family:'Press Start 2P';font-size:9px;color:#8893a4;background:#0b0f16;border:3px solid #243043;padding:12px 16px;cursor:${i===0?'not-allowed':'pointer'};opacity:${i===0?'.5':'1'};">◂ BACK</button>
-    <button onclick="WA.confirmStep()" style="font-family:'Press Start 2P';font-size:10px;color:#05080d;background:#34d399;border:3px solid #05080d;padding:12px 18px;cursor:pointer;margin-left:auto;">${isLast?'IT WORKED · FINISH TRACK ✓':'IT WORKED · NEXT ▸'}</button>
+    <button onclick="WA.confirmStep()" style="font-family:'Press Start 2P';font-size:10px;color:#05080d;background:#34d399;border:3px solid #05080d;padding:12px 18px;cursor:pointer;margin-left:auto;">${isLast?verb+' · FINISH TRACK ✓':verb+' · NEXT ▸'}</button>
   </div>`;
 
   return `
   <div style="max-width:760px;margin:0 auto;padding:22px 24px 30px;">
     <button onclick="WA.goHome()" style="font-family:'Press Start 2P';font-size:8px;color:#8893a4;background:none;border:0;cursor:pointer;padding:0;margin-bottom:14px;">◂ ALL TRACKS</button>
-    <div style="font-family:'Press Start 2P';font-size:9px;color:#22d3ee;margin-bottom:8px;">TRACK ${idx+1} · ${esc(t.title)}</div>
+    <div style="font-family:'Press Start 2P';font-size:9px;color:#22d3ee;margin-bottom:8px;">${esc(stageTag(stageOfTrack(t.id)))} · TRACK ${trackNum(t)} · ${esc(t.title)}</div>
     <p style="font-size:18px;color:#8893a4;margin:0 0 14px;">${esc(t.intent)}</p>
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:18px;">
       <span style="font-family:'Press Start 2P';font-size:8px;color:#8893a4;margin-right:6px;white-space:nowrap;">STEP ${i+1}/${t.steps.length}</span>
@@ -415,6 +504,7 @@ function viewTrack(){
       ${cmdsHtml}
       ${expectHtml}
       ${troubleHtml}
+      ${docHtml}
       ${done?`<div style="font-size:15px;color:#34d399;margin-bottom:12px;">You marked this step done. Revisit any time.</div>`:''}
       ${nav}
     </div>
