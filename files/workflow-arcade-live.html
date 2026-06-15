@@ -413,10 +413,12 @@ function trackRow(t, arcade){
 }
 function viewHome(){
   const arcade=readArcade();
+  const nextTrack = allTracks().find(tr=>trackUnlocked(tr) && !trackComplete(tr));
+  const resumable = !!nextTrack && Object.keys(state.done).length>0;
   const sectionsHtml = STAGES.map((s,si)=>{
     const unlocked=stageUnlocked(s); const total=s.tracks.length; const done=s.tracks.filter(trackComplete).length;
     const header=`<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
-      <span style="font-family:'Press Start 2P';font-size:11px;color:#e8edf2;">${esc(s.title)}</span>
+      <h2 style="font-family:'Press Start 2P';font-size:11px;color:#e8edf2;margin:0;">${esc(s.title)}</h2>
       <span style="font-family:'Press Start 2P';font-size:7px;color:#8893a4;">${done}/${total}</span>
     </div>
     <p style="font-size:16px;color:#8893a4;line-height:1.35;margin:0 0 12px;max-width:740px;">${esc(s.intent)}</p>`;
@@ -434,7 +436,10 @@ function viewHome(){
   <div style="padding:26px 26px 30px;">
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
       <span style="font-size:16px;color:#8893a4;">Working in: <span style="color:#34d399;">${esc(fill('{projectsDir}/{project}'))}</span></span>
-      <button onclick="WA.editSetup()" style="margin-left:auto;font-family:'Press Start 2P';font-size:7px;color:#22d3ee;background:#0b0f16;border:2px solid #22d3ee;padding:7px 9px;cursor:pointer;">✎ EDIT SETUP</button>
+      <div style="margin-left:auto;display:flex;gap:10px;align-items:center;">
+        ${resumable ? `<button onclick="WA.resume()" style="font-family:'Press Start 2P';font-size:7px;color:#05080d;background:#34d399;border:2px solid #05080d;padding:8px 10px;cursor:pointer;">▸ CONTINUE</button>` : ''}
+        <button onclick="WA.editSetup()" style="font-family:'Press Start 2P';font-size:7px;color:#22d3ee;background:#0b0f16;border:2px solid #22d3ee;padding:7px 9px;cursor:pointer;">✎ EDIT SETUP</button>
+      </div>
     </div>
     ${sectionsHtml}
   </div>`;
@@ -488,7 +493,7 @@ function viewTrack(){
   return `
   <div style="max-width:760px;margin:0 auto;padding:22px 24px 30px;">
     <button onclick="WA.goHome()" style="font-family:'Press Start 2P';font-size:8px;color:#8893a4;background:none;border:0;cursor:pointer;padding:0;margin-bottom:14px;">◂ ALL TRACKS</button>
-    <div style="font-family:'Press Start 2P';font-size:9px;color:#22d3ee;margin-bottom:8px;">${esc(stageTag(stageOfTrack(t.id)))} · TRACK ${trackNum(t)} · ${esc(t.title)}</div>
+    <h2 style="font-family:'Press Start 2P';font-size:9px;color:#22d3ee;margin:0 0 8px;">${esc(stageTag(stageOfTrack(t.id)))} · TRACK ${trackNum(t)} · ${esc(t.title)}</h2>
     <p style="font-size:18px;color:#8893a4;margin:0 0 14px;">${esc(t.intent)}</p>
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:18px;">
       <span style="font-family:'Press Start 2P';font-size:8px;color:#8893a4;margin-right:6px;white-space:nowrap;">STEP ${i+1}/${t.steps.length}</span>
