@@ -55,6 +55,9 @@ const requiredHtml = [
   /title="Badge case"/,
   /workflow-arcade-live\.html/,
   /DO IT FOR REAL/,
+  /wa-map-board/,
+  /openQuestFromMap/,
+  /wa-map-path-glow/,
 ];
 
 for (const pattern of requiredHtml) {

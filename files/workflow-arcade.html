@@ -24,6 +24,21 @@
   @keyframes wa-pulse{0%,100%{box-shadow:0 0 0 0 rgba(34,211,238,.55),0 0 22px rgba(34,211,238,.5)}50%{box-shadow:0 0 0 6px rgba(34,211,238,0),0 0 30px rgba(34,211,238,.8)}}
   @keyframes wa-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
   @keyframes wa-pop{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+  @keyframes wa-path-draw{from{stroke-dashoffset:1400}to{stroke-dashoffset:0}}
+  @keyframes wa-node-in{from{opacity:0;transform:scale(.55)}to{opacity:1;transform:scale(1)}}
+  @keyframes wa-map-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+  #wa-map-board{transition:transform .48s cubic-bezier(.33,1,.68,1);will-change:transform}
+  #wa-map-board.wa-map-zooming{transform:scale(2.35)}
+  #wa-map-board.wa-map-shake{animation:wa-map-shake .28s ease}
+  .wa-map-path-glow{stroke-dasharray:1400;stroke-dashoffset:1400;animation:wa-path-draw 2.2s ease-out forwards}
+  .wa-map-node-box{transition:transform .15s ease,filter .15s ease;animation:wa-node-in .42s ease backwards}
+  .wa-map-node-btn:hover .wa-map-node-box,.wa-map-node-btn:focus-visible .wa-map-node-box{transform:scale(1.1);filter:brightness(1.12)}
+  @media (prefers-reduced-motion:reduce){
+    .wa-map-path-glow{animation:none;stroke-dashoffset:0}
+    .wa-map-node-box{animation:none !important}
+    #wa-map-board{transition:none !important}
+    #wa-map-board.wa-map-shake{animation:none !important}
+  }
   a.wa-skip{position:absolute;left:-9999px;top:0;z-index:100;background:#ff2d78;color:#0a0912;font-family:'Press Start 2P';font-size:10px;padding:10px 14px;border:3px solid #050409;text-decoration:none;}
   a.wa-skip:focus{left:10px;top:10px;}
   :focus-visible{outline:3px solid #22d3ee;outline-offset:2px;}
@@ -443,11 +458,49 @@ const sa = (obj)=> ' style="'+esc(css(obj))+'"';   // style attribute from objec
 
 /* expose a global action dispatcher so inline handlers stay simple */
 window.WA = {
-  goHome, openLog, openBadges, openCert, openGuide, toggleAskPixel, toggleWorld, openQuest, resume,
+  goHome, openLog, openBadges, openCert, openGuide, toggleAskPixel, toggleWorld, openQuest, openQuestFromMap, mapLockedHint, resume,
   next, back, clearQuest, onPad, toggleExample, toggleHint, onReflect, doCheck, chooseBranch, onCertName,
   saveStep, removeGuide, onRecall, setConf, revealRecall, retryRecall, scoreRecall, exportGuide, copyCode, copyTerm,
   downloadCert, reset, toggleMusic, setMusicVol
 };
+
+/* ============================================================
+   MAP NAVIGATION (2D overworld zoom transitions)
+   ============================================================ */
+const MAP_REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let mapZoomTimer = null;
+
+function mapShakeBoard(){
+  if(MAP_REDUCE) return;
+  const board = document.getElementById('wa-map-board');
+  if(!board) return;
+  board.classList.add('wa-map-shake');
+  clearTimeout(mapShakeBoard._t);
+  mapShakeBoard._t = setTimeout(()=>board.classList.remove('wa-map-shake'), 280);
+}
+
+function mapLockedHint(idx){
+  announce('Quest '+QUESTS[idx].n+' is locked. Clear the prior quest first.');
+  mapShakeBoard();
+}
+
+function openQuestFromMap(id){
+  const idx = idxOf(id);
+  if(!unlocked(idx)){ mapLockedHint(idx); return; }
+  if(MAP_REDUCE || state.view!=='home'){ openQuest(id); return; }
+  const board = document.getElementById('wa-map-board');
+  if(!board){ openQuest(id); return; }
+  const lx = POS[idx][0], ty = POS[idx][1];
+  board.style.transformOrigin = lx+'% '+ty+'%';
+  board.classList.add('wa-map-zooming');
+  clearTimeout(mapZoomTimer);
+  mapZoomTimer = setTimeout(()=>{
+    board.classList.remove('wa-map-zooming');
+    const go = ()=>openQuest(id);
+    if(typeof document.startViewTransition==='function') document.startViewTransition(go);
+    else go();
+  }, 480);
+}
 
 /* ============================================================
    RENDER
@@ -502,6 +555,26 @@ function footer(){
 }
 
 /* ---------- HOME ---------- */
+function mapNodesHtml(){
+  const curIdx=currentIdx();
+  return QUESTS.map((q,idx)=>{
+    const lx=POS[idx][0], ty=POS[idx][1]; const acc=WORLDS[q.world].accent;
+    const done=!!state.cleared[q.id]; const unl=unlocked(idx); const current = idx===curIdx;
+    let boxStyle, symbol, labelColor, stateWord;
+    if(done){ boxStyle={width:'58px',height:'58px',background:acc,border:'4px solid #050409',display:'grid',placeItems:'center',fontFamily:"'Press Start 2P'",fontSize:'13px',color:'#0a0912',boxShadow:'0 6px 0 #050409',animationDelay:(idx*0.07)+'s'}; symbol='✓'; labelColor='#cfcfe6'; stateWord='cleared'; }
+    else if(current){ boxStyle={width:'62px',height:'62px',background:'#0a0912',border:'4px solid #22d3ee',display:'grid',placeItems:'center',fontFamily:"'Press Start 2P'",fontSize:'14px',color:'#22d3ee',animation:'wa-pulse 1.8s infinite',animationDelay:(idx*0.07)+'s'}; symbol=String(q.n); labelColor='#22d3ee'; stateWord='current'; }
+    else if(unl){ boxStyle={width:'58px',height:'58px',background:'#16131f',border:'4px solid '+acc,display:'grid',placeItems:'center',fontFamily:"'Press Start 2P'",fontSize:'13px',color:acc,boxShadow:'0 6px 0 #050409',animationDelay:(idx*0.07)+'s'}; symbol=String(q.n); labelColor='#9b9bbd'; stateWord='unlocked'; }
+    else { boxStyle={width:'58px',height:'58px',background:'#16131f',border:'4px solid #34334a',display:'grid',placeItems:'center',fontSize:'20px',color:'#54546e',boxShadow:'0 6px 0 #050409',animationDelay:(idx*0.07)+'s'}; symbol='🔒'; labelColor='#6c6c8c'; stateWord='locked'; }
+    const wrapStyle = { position:'absolute', left:lx+'%', top:ty+'%', transform:'translate(-50%,-50%)', display:'flex', flexDirection:'column', alignItems:'center', gap:'8px', background:'none', border:0, padding:0, cursor: unl?'pointer':'not-allowed', zIndex:3 };
+    const labelStyle = { fontFamily:"'Press Start 2P'", fontSize:'7px', color:labelColor, width:'112px', lineHeight:'1.5', textAlign:'center' };
+    const click = unl ? "WA.openQuestFromMap('"+q.id+"')" : "WA.mapLockedHint("+idx+")";
+    return `<button class="wa-map-node-btn" onclick="${click}" aria-label="Quest ${q.n}, ${esc(q.short)}, ${stateWord}"${unl?'':' aria-disabled="true"'}${sa(wrapStyle)}>
+      <span class="wa-map-node-box" aria-hidden="true"${sa(boxStyle)}>${esc(symbol)}</span>
+      <span${sa(labelStyle)}>${esc(q.short)}</span>
+    </button>`;
+  }).join('');
+}
+
 function viewHome(){
   const cleared=clearedCount(); const pct=Math.round(cleared/7*100);
   const curIdx=currentIdx();
@@ -511,22 +584,7 @@ function viewHome(){
   const integrityFillBig = { position:'absolute', inset:0, width:pct+'%', background:'repeating-linear-gradient(90deg,#34d399 0 10px,#2bb985 10px 12px)', boxShadow:'0 0 14px rgba(52,211,153,.5)' };
   const earnedBadges = BADGES.filter(b=>state.badges[b.id]).length;
   const guideCount = Object.keys(state.guide).length;
-
-  const mapNodes = QUESTS.map((q,idx)=>{
-    const lx=POS[idx][0], ty=POS[idx][1]; const acc=WORLDS[q.world].accent;
-    const done=!!state.cleared[q.id]; const unl=unlocked(idx); const current = idx===curIdx;
-    let boxStyle, symbol, labelColor, stateWord;
-    if(done){ boxStyle={width:'58px',height:'58px',background:acc,border:'4px solid #050409',display:'grid',placeItems:'center',fontFamily:"'Press Start 2P'",fontSize:'13px',color:'#0a0912',boxShadow:'0 6px 0 #050409'}; symbol='✓'; labelColor='#cfcfe6'; stateWord='cleared'; }
-    else if(current){ boxStyle={width:'62px',height:'62px',background:'#0a0912',border:'4px solid #22d3ee',display:'grid',placeItems:'center',fontFamily:"'Press Start 2P'",fontSize:'14px',color:'#22d3ee',animation:'wa-pulse 1.8s infinite'}; symbol=String(q.n); labelColor='#22d3ee'; stateWord='current'; }
-    else if(unl){ boxStyle={width:'58px',height:'58px',background:'#16131f',border:'4px solid '+acc,display:'grid',placeItems:'center',fontFamily:"'Press Start 2P'",fontSize:'13px',color:acc,boxShadow:'0 6px 0 #050409'}; symbol=String(q.n); labelColor='#9b9bbd'; stateWord='unlocked'; }
-    else { boxStyle={width:'58px',height:'58px',background:'#16131f',border:'4px solid #34334a',display:'grid',placeItems:'center',fontSize:'20px',color:'#54546e',boxShadow:'0 6px 0 #050409'}; symbol='🔒'; labelColor='#6c6c8c'; stateWord='locked'; }
-    const wrapStyle = { position:'absolute', left:lx+'%', top:ty+'%', transform:'translate(-50%,-50%)', display:'flex', flexDirection:'column', alignItems:'center', gap:'8px', background:'none', border:0, padding:0, cursor: unl?'pointer':'not-allowed' };
-    const labelStyle = { fontFamily:"'Press Start 2P'", fontSize:'7px', color:labelColor, width:'112px', lineHeight:'1.5', textAlign:'center' };
-    return `<button onclick="WA.openQuest('${q.id}')" aria-label="Quest ${q.n}, ${esc(q.short)}, ${stateWord}"${unl?'':' aria-disabled="true"'}${sa(wrapStyle)}>
-      <span aria-hidden="true"${sa(boxStyle)}>${esc(symbol)}</span>
-      <span${sa(labelStyle)}>${esc(q.short)}</span>
-    </button>`;
-  }).join('');
+  const mapNodes = mapNodesHtml();
 
   const rungDoneMap = { 1:rungDone(RUNGS[1]), 2:rungDone(RUNGS[2]), 3:rungDone(RUNGS[3]), 4:rungDone(RUNGS[4]) };
   const threadsHtml = THREADS.map(t=>{
@@ -599,14 +657,18 @@ function viewHome(){
 
     <div style="padding:6px 26px 30px;">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;"><span style="font-family:'Press Start 2P';font-size:10px;color:#f3f3f9;">OVERWORLD MAP</span><span style="font-size:16px;color:#8a8aa2;">7 quests · 3 worlds · click to play</span></div>
-      <div style="position:relative;height:330px;border:3px solid #2b2b3a;background:#08070f;overflow:hidden;">
+      <div id="wa-map-board" style="position:relative;height:330px;border:3px solid #2b2b3a;background:#08070f;overflow:hidden;">
+        <div aria-hidden="true" style="position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(90deg,rgba(124,92,255,.10) 0 1px,transparent 1px 44px),repeating-linear-gradient(0deg,rgba(124,92,255,.06) 0 1px,transparent 1px 44px);opacity:.45;"></div>
         <div aria-hidden="true" style="position:absolute;left:0;top:0;bottom:0;width:30%;background:linear-gradient(180deg,rgba(251,191,36,.10),rgba(251,191,36,.03));border-right:2px dashed rgba(251,191,36,.3);"></div>
         <div aria-hidden="true" style="position:absolute;left:30%;top:0;bottom:0;width:26%;background:linear-gradient(180deg,rgba(52,211,153,.10),rgba(52,211,153,.03));border-right:2px dashed rgba(52,211,153,.3);"></div>
         <div aria-hidden="true" style="position:absolute;left:56%;top:0;bottom:0;right:0;background:linear-gradient(180deg,rgba(255,45,120,.10),rgba(255,45,120,.03));"></div>
-        <div style="position:absolute;left:14px;top:10px;font-family:'Press Start 2P';font-size:8px;color:#fbbf24;">W1 · SETUP</div>
-        <div style="position:absolute;left:32%;top:10px;font-family:'Press Start 2P';font-size:8px;color:#34d399;">W2 · STEWARDSHIP</div>
-        <div style="position:absolute;left:58%;top:10px;font-family:'Press Start 2P';font-size:8px;color:#ff2d78;">W3 · CONTROL</div>
-        <svg aria-hidden="true" viewBox="0 0 1100 330" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;"><polyline points="88,200 240,108 396,200 550,108 700,200 856,108 990,200" fill="none" stroke="#3a3a55" stroke-width="4" stroke-dasharray="3 12" stroke-linecap="round"/></svg>
+        <div style="position:absolute;left:14px;top:10px;font-family:'Press Start 2P';font-size:8px;color:#fbbf24;z-index:2;">W1 · SETUP</div>
+        <div style="position:absolute;left:32%;top:10px;font-family:'Press Start 2P';font-size:8px;color:#34d399;z-index:2;">W2 · STEWARDSHIP</div>
+        <div style="position:absolute;left:58%;top:10px;font-family:'Press Start 2P';font-size:8px;color:#ff2d78;z-index:2;">W3 · CONTROL</div>
+        <svg aria-hidden="true" viewBox="0 0 1100 330" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;">
+          <polyline class="wa-map-path-glow" points="88,200 240,108 396,200 550,108 700,200 856,108 990,200" fill="none" stroke="rgba(109,109,242,.35)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <polyline points="88,200 240,108 396,200 550,108 700,200 856,108 990,200" fill="none" stroke="#3a3a55" stroke-width="4" stroke-dasharray="3 12" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
         ${mapNodes}
       </div>
     </div>
