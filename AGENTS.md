@@ -17,9 +17,9 @@ There is no package.json, bundler, linter, or build step. Editing is direct file
 
 ## Architecture
 
-Everything renders from `files/workflow-arcade.html` (~1158 lines), a single self-contained vanilla-JS file ported from the v3 Neon Grid design build. Google Fonts (`Press Start 2P` and `VT323`) is the only external runtime dependency.
+Everything renders from `files/workflow-arcade.html`, a single self-contained vanilla-JS file ported from the v3 Neon Grid design build. Google Fonts (`Press Start 2P` and `VT323`) is the only external runtime dependency.
 
-The app is a plain state object plus a `render()` that rebuilds the whole view; there is no MODULES-render-into-stage model and no component framework. The `<script>` is one IIFE organized by banner comments: DATA, STATE, HELPERS, AUDIO, NAVIGATION + ACTIONS, the style-object-to-CSS helper, and RENDER.
+The app is a plain state object plus a `render()` that rebuilds the whole view; there is no MODULES-render-into-stage model and no component framework. The `<script>` is one IIFE organized by banner comments: DATA, STATE, HELPERS, AUDIO, NAVIGATION + ACTIONS, MAP NAVIGATION, the style-object-to-CSS helper, and RENDER.
 
 - **State.** A single `state` object holds everything: `view`, `questId`, `step`, `cleared`, `stepAt`, `xp`, `pads`, `passed`, `checks`, `badges`, `branch`, `openWorlds`, `showHint`, `showExample`, `askPixel`, `certName`, `thresholdRung`, `reflections`, `guide`, `recallDone`, `recall`, `copiedKey`, `vol`, `muted`, `musicOn`. Action functions mutate `state`, call `persist()`, and call `render()`.
 - **Render and view routing.** `render()` writes `document.getElementById('wa-root').innerHTML` from a template built by `viewBody()`, then restores caret focus to the logically matching field. `viewBody()` switches on `state.view` across `home`, `quest`, `log`, `badges`, `cert`, `guide`, and `threshold` views, each produced by its own `view*()` function. The whole shell (top bar, main, footer) is rebuilt on every render; there is no incremental DOM diffing.
@@ -56,7 +56,7 @@ The look is the locked v3 "Neon Grid" direction (full spec in `docs/design/neon-
 
 - **Cabinet shell** with the scanline overlay and the top bar.
 - **Top bar** with the logo, an XP readout, and the INTEGRITY meter (a `N / 7` cleared progress bar), plus the music toggle, volume slider, and home/log/guide/badges nav buttons.
-- **Horizontal overworld board** on the home hub: three colored zone bands, an SVG dotted zig-zag trail, and seven absolutely-positioned, aria-labeled quest nodes with cleared, current (pulsing beacon), unlocked, and locked states under **sequential unlock gating**.
+- **Horizontal overworld board** on the home hub: three colored zone bands, an animated SVG zig-zag trail, a neon grid wash, and seven keyboard-focusable, aria-labeled quest nodes with cleared, current (pulsing beacon), unlocked, and locked states under **sequential unlock gating**. Click an unlocked node to zoom the board, then enter the quest walkthrough (with View Transitions API when supported).
 - **Quest walkthrough** (`viewQuest`): one step at a time with the CORE ESF PRINCIPLE callout, meta chips, a segmented progress bar, a **scripted terminal** (labeled SIMULATED, NEVER EXECUTES; it renders fixed lines and never accepts or runs input), the **PROJECT STATE** tree, and a copyable REFERENCE code block.
 - **Practice pad** with a **PEEK EXAMPLE** worked example that auto-shows on early quests and fades to peek-only later, a per-step WHY THIS WORKS reflection field, and an ON YOUR MACHINE file panel on artifact steps (the app never writes to the learner's folder).
 - **Structure check** (CHECK ANSWER): an honest keyword-presence check that banks XP and fires a badge; the copy states it reads structure, not understanding.
